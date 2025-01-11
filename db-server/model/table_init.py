@@ -3,9 +3,9 @@ import datetime
 
 
 db = MySQLDatabase("fl", 
-                    "root",
-                    "localhost", 
-                    "password",
+                    user="root",
+                    host="localhost", 
+                    password="password",
                     charset='utf8mb4')
 
 class BaseModel(Model):
