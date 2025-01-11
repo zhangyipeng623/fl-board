@@ -1,6 +1,21 @@
 from peewee import *
-from model import User
+import datetime
+class BaseModel(Model):
+    class Meta:
+        database = db  
 
+
+class User(BaseModel):
+    id = AutoField()
+    username = CharField(unique=True)
+    password = CharField()
+    ip = CharField(null=False)
+    port = IntegerField(null=False)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+
+    class Meta:
+        table_name = 'users'  
 
 db = MySQLDatabase("fl", 
                     "root",
