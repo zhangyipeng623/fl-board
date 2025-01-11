@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { state } from "@/utils/ settings";
+import { state } from "@/utils/settings";
 import axios from "axios";
 const username = ref("");
 const password = ref("");

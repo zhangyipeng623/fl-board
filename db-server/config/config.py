@@ -23,13 +23,13 @@ class Config(object):
     Redis_host = "localhost"
     Redis_port = 6379
     Redis_db = 0
-    Redis_password = "123456pwd"
+    Redis_password = "password"
 
     Mysql_host = "localhost"
     Mysql_port = 3306
-    Mysql_user = "zyp"
+    Mysql_user = "root"
     Mysql_password = "password"
-    Mysql_db = "bs_fl"
+    Mysql_db = "fl"
 
 
 

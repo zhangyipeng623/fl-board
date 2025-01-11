@@ -18,10 +18,8 @@ class User(BaseModel):
     id = AutoField()
     username = CharField(unique=True)
     password = CharField()
-    token = CharField(null=True)
-    email = CharField(unique=True)
-    is_admin = BooleanField(default=False)
-    is_active = BooleanField(default=True)
+    ip = CharField(null=False)
+    port = IntegerField(null=False)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 
