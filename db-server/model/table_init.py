@@ -1,5 +1,5 @@
 from peewee import *
-from model import *
+from model import User
 
 
 db = MySQLDatabase("fl", 
