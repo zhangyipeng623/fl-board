@@ -20,12 +20,12 @@ class Config(object):
 
 
     # database config
-    Redis_host = "localhost"
+    Redis_host = "10.211.55.12"
     Redis_port = 6379
     Redis_db = 0
     Redis_password = "password"
 
-    Mysql_host = "localhost"
+    Mysql_host = "10.211.55.12"
     Mysql_port = 3306
     Mysql_user = "root"
     Mysql_password = "password"

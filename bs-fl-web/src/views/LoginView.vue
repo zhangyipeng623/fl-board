@@ -11,13 +11,19 @@ const router = useRouter();
 const handleLogin = async () => {
 	// 这里可以添加实际的登录逻辑，比如调用 API
 	try {
-		const res = await axios.post(state.local_ip_port + "/login", {
-			username: username.value,
-			password: password.value,
-		});
+		const res = await axios.post(
+			"http://" + state.center.ip + ":" + state.center.port + "/login",
+			{
+				username: username.value,
+				password: password.value,
+			}
+		);
 		console.log(res.data);
-		localStorage.setItem("userToken", res.data.token); // 示例: 登录后设置 token
-		state.updateUserInfo(username.value, res.data.token, true);
+		localStorage.setItem("userSession", res.data.session); // 示例: 登录后设置 token
+		localStorage.setItem("username", username.value);
+		localStorage.setItem("ip", state.user.ip);
+		state.updateUserInfo(username.value, true);
+		state.updateCenterInfo(true);
 		router.push({ name: "home" }); // 登录后重定向到主页
 	} catch (error) {
 		console.log(error);

@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import NodeInfo from "@/components/NodeInfo.vue";
 import Head from "@/components/Head.vue";
+
 const title = ref("节点信息");
 </script>
 

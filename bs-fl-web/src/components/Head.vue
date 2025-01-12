@@ -1,9 +1,23 @@
 <script setup lang="ts">
 import { RouterView, useRouter } from "vue-router";
 import { defineProps } from "vue";
+import { ref } from "vue";
+import { state } from "@/utils/settings";
 const router = useRouter();
 const user_click = () => {
 	console.log("user click");
+	if (state.user.is_connect) {
+		router.push("/");
+	} else {
+		router.push("/login");
+	}
+};
+const logout = () => {
+	console.log("logout");
+	localStorage.removeItem("userSession"); // 示例: 登录后设置 token
+	localStorage.removeItem("username");
+	localStorage.removeItem("ip");
+	state.updateUserInfo("本地节点", false);
 	router.push("/login");
 };
 const { title } = defineProps(["title"]);
@@ -14,10 +28,23 @@ const { title } = defineProps(["title"]);
 		<h1 class="title" id="title">
 			{{ title }}
 		</h1>
-		<el-avatar
-			class="user-avatar"
-			@click="user_click"
-			src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+		<el-dropdown size="large" type="primary">
+			<el-avatar
+				class="user-avatar"
+				@click="user_click"
+				src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+			<template #dropdown>
+				<el-dropdown-menu v-if="state.user.is_connect">
+					<el-dropdown-item>{{ state.user.name }}</el-dropdown-item>
+					<el-dropdown-item @click="logout">登出</el-dropdown-item>
+				</el-dropdown-menu>
+				<el-dropdown-menu v-else>
+					<el-dropdown-item @click="router.push('/login')"
+						>登录</el-dropdown-item
+					>
+				</el-dropdown-menu>
+			</template>
+		</el-dropdown>
 	</div>
 	<RouterView />
 </template>
@@ -29,7 +56,7 @@ const { title } = defineProps(["title"]);
 	position: sticky;
 	margin: 10px 10px 0 10px;
 	border-radius: 10px;
-	background-color: #ffffff;
+	background-color: rgba(255, 255, 255, 0.5);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -40,5 +67,6 @@ const { title } = defineProps(["title"]);
 }
 .user-avatar {
 	margin-right: 5px;
+	cursor: pointer;
 }
 </style>

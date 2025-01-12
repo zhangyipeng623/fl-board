@@ -17,7 +17,7 @@ class BaseModel(Model):
 class User(BaseModel):
     id = AutoField()
     username = CharField(unique=True)
-    password = CharField()
+    password = CharField(null=False)
     ip = CharField(null=False)
     port = IntegerField(null=False)
     created_at = DateTimeField(default=datetime.datetime.now)

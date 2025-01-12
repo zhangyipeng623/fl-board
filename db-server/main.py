@@ -1,11 +1,14 @@
 from fastapi import FastAPI
-from views import router
+from views import router_list
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from config import config 
 
 app = FastAPI() # 创建 api 对象
-app.include_router(router) # 注册路由
+
+for router in router_list: # 注册路由
+    app.include_router(router) 
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 

@@ -1,28 +1,37 @@
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
+
+export interface DbNode {
+    name: string;
+    ip: string;
+    port: string;
+    is_connect: boolean;
+}
 
 export const state = reactive({
     
     user:{
-        username: "",
-        token: "",
-        isLogin: false,
-    },
-    center:{
-        ip_port: "10.211.55.12:8000",
+        name: "本地节点",
+        ip: "127.0.0.1",
+        port: "8000",
         is_connect: false,
     },
+    center:{
+        name:"中心节点",
+        ip:"127.0.0.1",
+        port:"8000",
+        is_connect:false,
+    } as DbNode,
+    db_node:ref([] as DbNode[]),
 
-    local_ip_port: "10.211.55.13:8000",
-
-    updateUserInfo: (username: string, token: string, isLogin: boolean) => {
-        state.user.username = username;
-        state.user.token = token;
-        state.user.isLogin = isLogin;
+    updateUserInfo: (username: string, isLogin: boolean) => {
+        state.user.name = username;
+        state.user.is_connect = isLogin;
     },
-    updateCenterInfo: (ip_port: string, is_connect: boolean) => {
-        state.center.ip_port = ip_port;
-        state.center.is_connect = is_connect;
+    updateCenterInfo: (is_connect: boolean) => {
+        state.center.is_connect = is_connect
+    },
+    updateDbNode: (db_node: DbNode[]) => {
+        state.db_node = db_node;
     }
 })
-
 
