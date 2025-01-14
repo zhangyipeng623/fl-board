@@ -5,6 +5,7 @@ export const getNodeStatus = async () => {
         const res = await axios.get("http://" + state.center.ip + ":" + state.center.port + "/node/status",{
             params:{
                 session: localStorage.getItem("userSession"),
+                username: state.user.name,
             },
         });
         state.updateDbNode(res.data.user_list);

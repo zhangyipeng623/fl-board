@@ -15,7 +15,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.middleware("http")
 async def check_session(request: Request, call_next):
-    if request.url.path == "/login" or request.url.path == "/check_session":
+    if request.url.path == "/login" or request.url.path == "/check_session" or request.url.path == "/status":
         return await call_next(request)
     session = request.query_params.get("session")
     user_id = redis.get(session)

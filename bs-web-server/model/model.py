@@ -1,5 +1,7 @@
 from peewee import *
 from config import config
+import datetime
+import csv
 
 db = MySQLDatabase(config.Mysql_db, 
                     user=config.Mysql_user,
@@ -7,8 +9,24 @@ db = MySQLDatabase(config.Mysql_db,
                     password=config.Mysql_password,
                     charset='utf8mb4',
                     connect_timeout=10,)
-import datetime
 
+
+
+def insert_data_from_csv(file_path,table_name,column_names=None):
+    with open(file_path, 'r') as file:
+        reader = csv.reader(file)
+        if column_names is None:
+            column_names = next(reader)
+        else:
+            column_names = column_names
+        model_class = type(table_name, (BaseModel,), {name: CharField() for name in column_names + ['created_at']})
+        db.connect()
+        db.create_tables([model_class],safe=True)
+        for row in reader:
+            data = dict(zip(column_names, row))
+            data['created_at'] = datetime.datetime.now()
+            model_class.create(**data)
+        db.close()
 
 class BaseModel(Model):
     class Meta:

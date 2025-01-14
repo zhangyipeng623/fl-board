@@ -16,9 +16,14 @@ const handleClose = (key: string, keyPath: string[]) => {
 };
 const router = useRouter();
 
-const itemAbout = () => {
-	console.log("about");
-	router.push({ path: "/about" });
+const goOriginal = () => {
+	router.push({ path: "/original" });
+};
+const goAlignRule = () => {
+	router.push({ path: "/align_rule" });
+};
+const goAlignData = () => {
+	router.push({ path: "/align_data" });
 };
 const goNodeInfo = () => {
 	console.log("goNodeInfo");
@@ -54,10 +59,15 @@ const goHome = () => {
 				<el-sub-menu index="1">
 					<template #title>
 						<el-icon><location /></el-icon>
-						<span>Navigator One</span>
+						<span>数据集管理</span>
 					</template>
-					<el-menu-item index="1-1" @click="itemAbout">item one</el-menu-item>
-					<el-menu-item index="1-2">item three</el-menu-item>
+					<el-menu-item index="1-1" @click="goOriginal"
+						>原始数据集</el-menu-item
+					>
+					<el-menu-item index="1-2" @click="goAlignRule">对齐规则</el-menu-item>
+					<el-menu-item index="1-3" @click="goAlignData"
+						>对齐数据集</el-menu-item
+					>
 				</el-sub-menu>
 				<el-menu-item index="3">
 					<el-icon><document /></el-icon>

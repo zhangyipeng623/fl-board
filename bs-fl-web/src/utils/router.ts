@@ -19,16 +19,18 @@ const beforeEnter = async (to: RouteLocationNormalized, from: RouteLocationNorma
 					},
 				}
 			); // 检查session是否有效
-      if (res.data.code === 200) {
-          const res = await axios.get(
-            "http://" + state.center.ip + ":" + state.center.port + "/check_local_session",
+      if (res.status === 200) {
+          state.updateCenterInfo(true);
+          state.updateUserInfo(res.data.id,res.data.username,res.data.ip,res.data.port,true);
+          const res_local = await axios.get(
+            "http://" + state.user.ip + ":" + state.user.port + "/check_session",
             {
               params: {
                 session: localStorage.getItem("localSession"),
               },
             }
           );
-          if (res.data.code === 200) {
+          if (res_local.status === 200) {
             next(); // 如果localSession有效，正常进入
           } else {
             next({ name: 'login' }); // 如果localSession无效，重定向到登录页面
@@ -67,9 +69,9 @@ const router = createRouter({
     },
     
     {
-      path: '/about',
-      name: 'about',
-      component: () => import('@/views/AboutView.vue'),
+      path: '/original',
+      name: 'original',
+      component: () => import('@/views/OriginalView.vue'),
       beforeEnter: beforeEnter,
     }
   ]

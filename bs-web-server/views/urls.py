@@ -3,22 +3,22 @@ from pydantic import BaseModel
 from model import User,redis
 import psutil
 import uuid
-
+import json
 
 router = APIRouter()
 
 class LoginForm(BaseModel):
     username: str
     password: str
-    ip: str
 
 @router.post("/login") # 根路由
 def login(form: LoginForm):
-    user = User.select().where(User.username == form.username, User.password == form.password, User.ip == form.ip).get()
+    user = User.select().where(User.username == form.username, User.password == form.password).get()
     if(user is None):
         return HTTPException(status_code=401, detail="用户名或密码错误")
     session = str(uuid.uuid4())
-    redis.set(session, user.id, ex=60*60*24*2)
+    user_info = json.dumps({"username": user.username, "id": user.id,"ip":user.ip,"port":user.port})
+    redis.set(session, user_info, ex=60*60*24*2)
     return {"ip": user.ip, "port": user.port,"session": session}
 
 @router.get("/status")
@@ -61,7 +61,13 @@ def get_status():
 @router.get("/check_session")
 def check_session(request: Request):
     session = request.query_params.get("session")
-    user_id = redis.get(session)
-    if(user_id is None):
+    user_info = redis.get(session)
+    if(user_info is None):
         return HTTPException(status_code=401, detail="用户未登录")
-    return {"user_id": user_id}
+    return {"user_info": user_info}
+
+@router.get("/logout")
+def logout(request: Request):
+    session = request.query_params.get("session")
+    redis.delete(session)
+    return {"message": "用户已退出"}

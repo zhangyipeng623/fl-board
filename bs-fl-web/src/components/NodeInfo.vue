@@ -85,7 +85,7 @@ onMounted(async () => {
 							style="width: 230px; height: 80px; margin: 10px; cursor: pointer"
 							@click="display_node_status(state.center)">
 							<span class="node-name">
-								{{ state.center.name }}:{{ state.center.ip }} :{{
+								{{ state.center.name }}:{{ state.center.ip }}:{{
 									state.center.port
 								}}
 							</span>
@@ -119,6 +119,21 @@ onMounted(async () => {
 							<el-skeleton style="width: 100%" />
 							<el-skeleton style="width: 100%" />
 						</div>
+						<el-card
+							style="width: 230px; height: 80px; margin: 10px; cursor: pointer"
+							@click="display_node_status(state.center)">
+							<span class="node-name">
+								本机:{{ state.user.ip }}:{{ state.user.port }}
+							</span>
+							<span
+								class="node-status"
+								:class="{
+									connected: state.user.is_connect,
+									disconnected: !state.user.is_connect,
+								}">
+								{{ state.user.is_connect ? "连接" : "断开" }}
+							</span>
+						</el-card>
 						<div
 							v-for="(node, index) in state.db_node"
 							:key="index"

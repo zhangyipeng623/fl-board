@@ -2,7 +2,9 @@
 import { RouterView, useRouter } from "vue-router";
 import { defineProps } from "vue";
 import { state } from "@/utils/settings";
+import axios from "axios";
 const router = useRouter();
+
 const user_click = () => {
 	console.log("user click");
 	if (state.user.is_connect) {
@@ -13,10 +15,26 @@ const user_click = () => {
 };
 const logout = () => {
 	console.log("logout");
+	axios
+		.get("http://" + state.center.ip + ":" + state.center.port + "/logout", {
+			params: {
+				session: localStorage.getItem("userSession"),
+			},
+		})
+		.then(() => {
+			axios.get("http://" + state.user.ip + ":" + state.user.port + "/logout", {
+				params: {
+					session: localStorage.getItem("localSession"),
+				},
+			});
+		})
+		.catch((error) => {
+			console.error("Error logging out:", error);
+		});
 	localStorage.removeItem("userSession"); // 示例: 登录后设置 token
 	localStorage.removeItem("username");
 	localStorage.removeItem("ip");
-	state.updateUserInfo("本地节点", false);
+	state.updateUserInfo(0, "本地节点", "", "", false);
 	router.push("/login");
 };
 const { title } = defineProps(["title"]);

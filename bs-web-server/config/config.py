@@ -4,7 +4,7 @@ class Config(object):
     # server config
     App = "main:app"
     Host = "localhost"
-    Port = 8000
+    Port = 8100
     Reload = True
     DEBUG = True
     
@@ -20,12 +20,12 @@ class Config(object):
 
 
     # database config
-    Redis_host = "10.211.55.12"
+    Redis_host = "10.211.55.14"
     Redis_port = 6379
     Redis_db = 0
     Redis_password = "password"
 
-    Mysql_host = "10.211.55.12"
+    Mysql_host = "10.211.55.14"
     Mysql_port = 3306
     Mysql_user = "root"
     Mysql_password = "password"

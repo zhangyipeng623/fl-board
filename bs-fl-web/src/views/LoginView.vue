@@ -16,26 +16,36 @@ const handleLogin = async () => {
 			{
 				username: username.value,
 				password: password.value,
-				ip: state.user.ip,
 			}
 		);
-		if (res.data.code === 200) {
+		if (res.status === 200) {
 			localStorage.setItem("userSession", res.data.session); // 示例: 登录后设置 token
 			localStorage.setItem("username", username.value);
-			localStorage.setItem("ip", state.user.ip);
-			const res_local = await axios.get(
+			localStorage.setItem("ip", res.data.ip);
+			state.updateCenterInfo(true);
+			state.updateUserInfo(
+				res.data.id,
+				username.value,
+				res.data.ip,
+				res.data.port,
+				false
+			);
+			const res_local = await axios.post(
 				"http://" + state.user.ip + ":" + state.user.port + "/login",
 				{
-					params: {
-						username: username.value,
-						password: password.value,
-					},
+					username: username.value,
+					password: password.value,
 				}
 			);
-			if (res_local.data.code === 200) {
+			if (res_local.status === 200) {
 				localStorage.setItem("localSession", res_local.data.session);
-				state.updateUserInfo(username.value, true);
-				state.updateCenterInfo(true);
+				state.updateUserInfo(
+					state.user.id,
+					username.value,
+					state.user.ip,
+					state.user.port,
+					true
+				);
 				router.push({ name: "home" }); // 登录后重定向到主页
 			} else {
 				alert("登录失败，请检查用户名和密码");
@@ -44,7 +54,6 @@ const handleLogin = async () => {
 			alert("登录失败，请检查用户名和密码");
 		}
 	} catch (error) {
-		console.log(error);
 		alert("登录失败，请检查用户名和密码");
 	}
 };

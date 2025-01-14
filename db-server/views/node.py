@@ -5,7 +5,8 @@ import requests
 node = APIRouter(prefix="/node")
 
 @node.get("/status")
-def get_node(request: Request,username: str = None):
+def get_node(request: Request):
+    username = request.query_params.get("username")
     user_list = User.select(User.username, User.ip, User.port).where(User.username != username).order_by(User.created_at.desc()).dicts()
     user_list = list(user_list)
     session = request.query_params.get("session")

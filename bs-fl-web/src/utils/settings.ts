@@ -10,9 +10,10 @@ export interface DbNode {
 export const state = reactive({
     
     user:{
+        id: 0,
         name: "本地节点",
         ip: "127.0.0.1",
-        port: "8000",
+        port: "8100",
         is_connect: false,
     },
     center:{
@@ -23,8 +24,11 @@ export const state = reactive({
     } as DbNode,
     db_node:ref([] as DbNode[]),
 
-    updateUserInfo: (username: string, isLogin: boolean) => {
+    updateUserInfo: (id: number, username: string, ip: string, port: string, isLogin: boolean) => {
+        state.user.id = id;
         state.user.name = username;
+        state.user.ip = ip;
+        state.user.port = port;
         state.user.is_connect = isLogin;
     },
     updateCenterInfo: (is_connect: boolean) => {

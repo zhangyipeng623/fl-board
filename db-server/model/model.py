@@ -27,3 +27,15 @@ class User(BaseModel):
     class Meta:
         table_name = 'users'  
 
+class DataBase(BaseModel):
+    id = AutoField()
+    db_name = CharField(null=False)
+    user_id = IntegerField(null=False)
+    username = CharField(null=False)
+    field = TextField(null=False)
+    data_number = IntegerField(null=False, default=0)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+
+    class Meta:
+        table_name = 'data_base'

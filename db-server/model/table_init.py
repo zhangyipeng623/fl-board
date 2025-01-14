@@ -13,19 +13,21 @@ class BaseModel(Model):
         database = db  
 
 
-class User(BaseModel):
+class DataBase(BaseModel):
     id = AutoField()
-    username = CharField(unique=True)
-    password = CharField()
-    ip = CharField(null=False)
-    port = IntegerField(null=False)
+    db_name = CharField(null=False)
+    user_id = IntegerField(null=False)
+    username = CharField(null=False)
+    field = TextField(null=False)
+    data_number = IntegerField(null=False, default=0)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
-        table_name = 'users' 
+        table_name = 'data_base'
+
 def init_table():
-    db.create_tables([User])
+    db.create_tables([DataBase])
 
 if __name__ == '__main__':
     init_table()
