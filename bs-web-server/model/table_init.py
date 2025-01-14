@@ -1,14 +1,12 @@
 from peewee import *
-from config import config
-
-db = MySQLDatabase(config.Mysql_db, 
-                    user=config.Mysql_user,
-                    host=config.Mysql_host, 
-                    password=config.Mysql_password,
-                    charset='utf8mb4',
-                    connect_timeout=10,)
 import datetime
 
+
+db = MySQLDatabase("fl", 
+                    user="root",
+                    host="localhost", 
+                    password="password",
+                    charset='utf8mb4')
 
 class BaseModel(Model):
     class Meta:
@@ -18,12 +16,16 @@ class BaseModel(Model):
 class User(BaseModel):
     id = AutoField()
     username = CharField(unique=True)
-    password = CharField(null=False)
+    password = CharField()
     ip = CharField(null=False)
     port = IntegerField(null=False)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
-        table_name = 'users'  
+        table_name = 'users' 
+def init_table():
+    db.create_tables([User])
 
+if __name__ == '__main__':
+    init_table()

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { RouterView, useRouter } from "vue-router";
 import { defineProps } from "vue";
-import { ref } from "vue";
 import { state } from "@/utils/settings";
 const router = useRouter();
 const user_click = () => {

@@ -5,7 +5,8 @@ db = MySQLDatabase(config.Mysql_db,
                     user=config.Mysql_user,
                     host=config.Mysql_host, 
                     password=config.Mysql_password,
-                    charset='utf8mb4')
+                    charset='utf8mb4',
+                    connect_timeout=10,)
 import datetime
 
 

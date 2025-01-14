@@ -16,15 +16,33 @@ const handleLogin = async () => {
 			{
 				username: username.value,
 				password: password.value,
+				ip: state.user.ip,
 			}
 		);
-		console.log(res.data);
-		localStorage.setItem("userSession", res.data.session); // 示例: 登录后设置 token
-		localStorage.setItem("username", username.value);
-		localStorage.setItem("ip", state.user.ip);
-		state.updateUserInfo(username.value, true);
-		state.updateCenterInfo(true);
-		router.push({ name: "home" }); // 登录后重定向到主页
+		if (res.data.code === 200) {
+			localStorage.setItem("userSession", res.data.session); // 示例: 登录后设置 token
+			localStorage.setItem("username", username.value);
+			localStorage.setItem("ip", state.user.ip);
+			const res_local = await axios.get(
+				"http://" + state.user.ip + ":" + state.user.port + "/login",
+				{
+					params: {
+						username: username.value,
+						password: password.value,
+					},
+				}
+			);
+			if (res_local.data.code === 200) {
+				localStorage.setItem("localSession", res_local.data.session);
+				state.updateUserInfo(username.value, true);
+				state.updateCenterInfo(true);
+				router.push({ name: "home" }); // 登录后重定向到主页
+			} else {
+				alert("登录失败，请检查用户名和密码");
+			}
+		} else {
+			alert("登录失败，请检查用户名和密码");
+		}
 	} catch (error) {
 		console.log(error);
 		alert("登录失败，请检查用户名和密码");

@@ -1,13 +1,27 @@
-from fastapi import FastAPI
-from views import router
+from fastapi import FastAPI, Request,HTTPException
+from views import router_list
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from config import config 
+from model import redis
 
 app = FastAPI() # 创建 api 对象
-app.include_router(router) # 注册路由
+
+for router in router_list: # 注册路由
+    app.include_router(router) 
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+@app.middleware("http")
+async def check_session(request: Request, call_next):
+    if request.url.path == "/login" or request.url.path == "/check_session":
+        return await call_next(request)
+    session = request.query_params.get("session")
+    user_id = redis.get(session)
+    if(user_id is None):
+        return HTTPException(status_code=401, detail="用户未登录")
+    return await call_next(request)
 
 # 添加 CORS 中间件
 app.add_middleware(

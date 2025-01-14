@@ -14,6 +14,7 @@ const node_info = ref({
 	redis: "false",
 	nginx: "false",
 });
+
 const display_node_status = async (node: DbNode) => {
 	node_status.value = node;
 	showOverlay.value = true;
@@ -22,17 +23,18 @@ const display_node_status = async (node: DbNode) => {
 			const res = await axios.get(
 				"http://" + node.ip + ":" + node.port + "/status",
 				{
-					headers: {
-						Authorization: `${localStorage.getItem("userSession")}`,
-					},
 					params: {
+						session: localStorage.getItem("userSession"),
 						username: localStorage.getItem("username"),
 						ip: localStorage.getItem("ip"),
 					},
 				}
 			);
-			node_info.value = res.data;
-			console.log(res.data);
+			node_info.value.mysql = res.data.data.mysql;
+			node_info.value.redis = res.data.data.redis;
+			node_info.value.nginx = res.data.data.nginx;
+			console.log(node_info.value, "node_info");
+			console.log(res.data, "res");
 		} catch (e) {
 			console.log(e);
 			node.is_connect = false;
@@ -41,13 +43,6 @@ const display_node_status = async (node: DbNode) => {
 };
 
 onMounted(async () => {
-	if (state.db_node.length > 0) {
-		loading.value = false;
-	} else {
-		loading.value = true;
-	}
-	await getNodeStatus(); // 初始调用一次
-
 	if (state.db_node.length > 0) {
 		loading.value = false;
 	} else {
@@ -63,9 +58,16 @@ onMounted(async () => {
 		}
 	}, 5000);
 
+	const intervalNodeStatus = setInterval(() => {
+		if (showOverlay.value) {
+			display_node_status(node_status.value);
+		}
+	}, 5000);
+
 	// 在组件卸载时清除定时器
 	onBeforeUnmount(() => {
 		clearInterval(intervalId);
+		clearInterval(intervalNodeStatus);
 	});
 });
 </script>
