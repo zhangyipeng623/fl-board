@@ -34,8 +34,36 @@ class DataBase(BaseModel):
     username = CharField(null=False)
     field = TextField(null=False)
     data_number = IntegerField(null=False, default=0)
+    file_name = CharField(null=False)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
         table_name = 'data_base'
+
+
+
+class Ruler(BaseModel):
+    id = AutoField()
+    ruler_name = CharField(null=False)
+    ruler_field = TextField(null=False)
+    aligned_db = TextField(null=False)
+    original_db = TextField(null=False)
+    data_count = IntegerField(null=False)
+    file_name = CharField(null=False)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+
+    class Meta:
+        table_name = 'ruler'
+
+class RulerDetail(BaseModel):
+    id = AutoField()
+    ruler_id = IntegerField(null=False)
+    original_node = TextField(null=False)
+    operator = TextField(null=False)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+
+    class Meta:
+        table_name = 'ruler_detail'

@@ -5,16 +5,8 @@ import axios from "axios";
 import { Plus } from "@element-plus/icons-vue";
 import { state } from "@/utils/settings";
 import type { UploadInstance } from "element-plus";
-const tableData = ref([
-	{
-		db_name: "test",
-		user_name: "test",
-		data_number: 100,
-		field: "test",
-		create_time: "2024-01-01",
-		update_time: "2024-01-01",
-	},
-]);
+
+const tableData = ref([]);
 const showOverlay = ref(false);
 const hasHeader = ref(true);
 const tableName = ref("");
@@ -25,7 +17,9 @@ const uploadUrl = computed(() => {
 		":" +
 		state.user.port +
 		"/db/upload?session=" +
-		localStorage.getItem("localSession")
+		localStorage.getItem("localSession") +
+		"&userSession=" +
+		localStorage.getItem("userSession")
 	);
 });
 const handleClick = () => {
@@ -57,6 +51,27 @@ const handleUploadError = (err: any, file: any) => {
 	alert(`上传失败: ${file.name} - ${err.message || "未知错误"}`); // 显示错误提示
 };
 
+const handleUploadSuccess = (res: any) => {
+	console.log("上传成功:", res);
+	showOverlay.value = false;
+	axios
+		.get(
+			"http://" + state.center.ip + ":" + state.center.port + "/db/original",
+			{
+				params: {
+					session: localStorage.getItem("userSession"),
+				},
+			}
+		)
+		.then((res) => {
+			console.log(res);
+			tableData.value = res.data.db_list;
+		})
+		.catch((error) => {
+			console.error("请求数据失败:", error);
+		});
+};
+
 onMounted(async () => {
 	const res = await axios.get(
 		"http://" + state.center.ip + ":" + state.center.port + "/db/original",
@@ -70,6 +85,16 @@ onMounted(async () => {
 	console.log(res);
 	tableData.value = res.data.db_list;
 });
+
+// 解析字段字符串为数组并格式化为字符串
+const parseFields = (fieldString: string) => {
+	if (fieldString.includes(",")) {
+		const fieldsArray = fieldString.split(","); // 解析字符串为数组
+		return fieldsArray.join("; "); // 将数组转换为以分号分隔的字符串
+	} else {
+		return [fieldString];
+	}
+};
 </script>
 
 <template>
@@ -84,7 +109,7 @@ onMounted(async () => {
 					width="200"
 					align="center" />
 				<el-table-column
-					prop="user_name"
+					prop="username"
 					label="节点名称"
 					width="200"
 					align="center" />
@@ -93,15 +118,23 @@ onMounted(async () => {
 					label="数据量"
 					width="120"
 					align="center" />
-				<el-table-column prop="field" label="字段" width="300" align="center" />
 				<el-table-column
-					prop="create_time"
+					label="字段"
+					width="300"
+					header-align="center"
+					align="center">
+					<template #default="{ row }">
+						{{ parseFields(row.field) }}
+					</template>
+				</el-table-column>
+				<el-table-column
+					prop="created_at"
 					sortable
 					label="创建时间"
 					width="200"
 					align="center" />
 				<el-table-column
-					prop="update_time"
+					prop="updated_at"
 					sortable
 					label="更新时间"
 					width="200"
@@ -140,8 +173,13 @@ onMounted(async () => {
 					:action="uploadUrl"
 					:auto-upload="false"
 					:before-upload="beforeUpload"
+					:on-success="handleUploadSuccess"
 					:on-error="handleUploadError"
-					:data="{ hasHeader: hasHeader, table_name: tableName }"
+					:data="{
+						hasHeader: hasHeader,
+						table_name: tableName,
+						user_id: state.user.id,
+					}"
 					accept=".csv">
 					<el-button size="small" type="primary">点击上传 CSV 文件</el-button>
 				</el-upload>

@@ -4,7 +4,7 @@ import datetime
 
 db = MySQLDatabase("fl", 
                     user="root",
-                    host="localhost", 
+                    host="10.211.55.12", 
                     password="password",
                     charset='utf8mb4')
 
@@ -13,21 +13,23 @@ class BaseModel(Model):
         database = db  
 
 
-class DataBase(BaseModel):
+class Ruler(BaseModel):
     id = AutoField()
-    db_name = CharField(null=False)
-    user_id = IntegerField(null=False)
-    username = CharField(null=False)
-    field = TextField(null=False)
-    data_number = IntegerField(null=False, default=0)
+    ruler_name = CharField(null=False)
+    ruler_field = TextField(null=False)
+    original_db = TextField(null=False)
+    data_count = IntegerField(null=False)
+    file_name = CharField(null=False)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
-        table_name = 'data_base'
+        table_name = 'ruler'
 
 def init_table():
-    db.create_tables([DataBase])
+    # 更新表
+    db.create_tables([ Ruler])
+
 
 if __name__ == '__main__':
     init_table()

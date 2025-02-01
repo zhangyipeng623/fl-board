@@ -20,13 +20,17 @@ def insert_data_from_csv(file_path,table_name,column_names=None):
         else:
             column_names = column_names
         model_class = type(table_name, (BaseModel,), {name: CharField() for name in column_names + ['created_at']})
-        db.connect()
         db.create_tables([model_class],safe=True)
+        data_count = 0
         for row in reader:
+            if row == column_names:
+                continue
             data = dict(zip(column_names, row))
             data['created_at'] = datetime.datetime.now()
             model_class.create(**data)
+            data_count += 1
         db.close()
+        return data_count
 
 class BaseModel(Model):
     class Meta:

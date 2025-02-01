@@ -24,6 +24,8 @@ class User(BaseModel):
 
     class Meta:
         table_name = 'users' 
+    
+
 def init_table():
     db.create_tables([User])
 

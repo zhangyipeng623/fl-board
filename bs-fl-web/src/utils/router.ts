@@ -73,6 +73,20 @@ const router = createRouter({
       name: 'original',
       component: () => import('@/views/OriginalView.vue'),
       beforeEnter: beforeEnter,
+    },
+
+    {
+      path: '/ruler',
+      name: 'ruler',
+      component: () => import('@/views/RulerView.vue'),
+      beforeEnter: beforeEnter,
+    },
+
+    {
+      path: '/aligned',
+      name: 'aligned',
+      component: () => import('@/views/AlignedView.vue'),
+      beforeEnter: beforeEnter,
     }
   ]
   

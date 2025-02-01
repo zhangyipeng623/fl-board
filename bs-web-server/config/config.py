@@ -18,6 +18,9 @@ class Config(object):
     Allow_methods = ["*"]
     Allow_headers = ["*"]
 
+    # 数据管理中心
+    center_host = "127.0.0.1"
+    center_port = 8000
 
     # database config
     Redis_host = "10.211.55.14"

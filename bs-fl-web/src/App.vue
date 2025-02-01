@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted, watch } from "vue";
 import { RouterView, useRouter } from "vue-router";
 import {
 	Document,
@@ -7,23 +8,22 @@ import {
 	Setting,
 } from "@element-plus/icons-vue";
 import cuc2 from "@/assets/images/cuc_2.png"; /* 大图标 */
-
+const router = useRouter();
 const handleOpen = (key: string, keyPath: string[]) => {
 	console.log(key, keyPath);
 };
 const handleClose = (key: string, keyPath: string[]) => {
 	console.log(key, keyPath);
 };
-const router = useRouter();
 
 const goOriginal = () => {
 	router.push({ path: "/original" });
 };
-const goAlignRule = () => {
-	router.push({ path: "/align_rule" });
+const goRuler = () => {
+	router.push({ path: "/ruler" });
 };
 const goAlignData = () => {
-	router.push({ path: "/align_data" });
+	router.push({ path: "/aligned" });
 };
 const goNodeInfo = () => {
 	console.log("goNodeInfo");
@@ -48,24 +48,24 @@ const goHome = () => {
 				background-color="#a7535a"
 				active-text-color="#51c4d3"
 				class="el-menu-vertical-demo"
-				default-active="2"
+				:default-active="1"
 				text-color="#fff"
 				@open="handleOpen"
 				@close="handleClose">
-				<el-menu-item index="2" @click="goNodeInfo">
+				<el-menu-item index="1" @click="goNodeInfo">
 					<el-icon><icon-menu /></el-icon>
 					<span>节点信息</span>
 				</el-menu-item>
-				<el-sub-menu index="1">
+				<el-sub-menu index="2">
 					<template #title>
 						<el-icon><location /></el-icon>
 						<span>数据集管理</span>
 					</template>
-					<el-menu-item index="1-1" @click="goOriginal"
+					<el-menu-item index="2-1" @click="goOriginal"
 						>原始数据集</el-menu-item
 					>
-					<el-menu-item index="1-2" @click="goAlignRule">对齐规则</el-menu-item>
-					<el-menu-item index="1-3" @click="goAlignData"
+					<el-menu-item index="2-2" @click="goRuler">对齐规则</el-menu-item>
+					<el-menu-item index="2-3" @click="goAlignData"
 						>对齐数据集</el-menu-item
 					>
 				</el-sub-menu>
