@@ -24,7 +24,7 @@ def get_node(request: Request):
     return {"user_list": user_list}
 
 @node.get("/list")
-def get_list(request: Request):
+def get_node_list(request: Request):
     user_list = User.select(
         User.username.alias("label"),  
         User.id.alias("value")).order_by(User.created_at.desc()).dicts()

@@ -87,6 +87,12 @@ const router = createRouter({
       name: 'aligned',
       component: () => import('@/views/AlignedView.vue'),
       beforeEnter: beforeEnter,
+    },
+
+    {
+      path: '/net',
+      name: 'net',
+      component: () => import('@/views/NetView.vue')
     }
   ]
   

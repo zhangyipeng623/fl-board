@@ -27,7 +27,6 @@ def upload(request: Request,db_info: DBInfo):
     user_info = json.loads(user_info)
     if user_info["id"] != db_info.user_id:
         raise HTTPException(status_code=401, detail="数据不正确")
-
     else:
         try:
             fields = json.loads(db_info.field)

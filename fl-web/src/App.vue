@@ -33,6 +33,10 @@ const goHome = () => {
 	console.log("goHome");
 	router.push({ path: "/home" });
 };
+const goNetInfo = () => {
+	console.log("goNetInfo");
+	router.push({ path: "/net" });
+};
 </script>
 
 <template>
@@ -69,9 +73,9 @@ const goHome = () => {
 						>对齐数据集</el-menu-item
 					>
 				</el-sub-menu>
-				<el-menu-item index="3">
+				<el-menu-item index="3" @click="goNetInfo">
 					<el-icon><document /></el-icon>
-					<span>Navigator Three</span>
+					<span>网络模型管理</span>
 				</el-menu-item>
 				<el-menu-item index="4">
 					<el-icon><setting /></el-icon>
