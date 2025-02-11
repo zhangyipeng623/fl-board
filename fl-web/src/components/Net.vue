@@ -8,17 +8,18 @@ import type { UploadInstance } from "element-plus";
 
 const tableData = ref([]);
 const showOverlay = ref(false);
-const hasHeader = ref(true);
-const tableName = ref("");
+
+const netName = ref("");
+const inputNum = ref("");
+const outputNum = ref("");
+
 const uploadUrl = computed(() => {
 	return (
 		"http://" +
-		state.user.ip +
+		state.center.ip +
 		":" +
-		state.user.port +
-		"/db/upload?session=" +
-		localStorage.getItem("localSession") +
-		"&userSession=" +
+		state.center.port +
+		"/net/upload?session=" +
 		localStorage.getItem("userSession")
 	);
 });
@@ -43,9 +44,10 @@ const uploadRef = ref<UploadInstance>();
 
 const handleUpload = () => {
 	console.log("上传逻辑处理");
-	console.log("是否有表头:", hasHeader.value);
+	console.log("是否有表头:", netName.value);
 	uploadRef.value!.submit();
 };
+
 const handleUploadError = (err: any, file: any) => {
 	console.error("上传失败:", err); // 打印错误信息
 	alert(`上传失败: ${file.name} - ${err.message || "未知错误"}`); // 显示错误提示
@@ -55,17 +57,14 @@ const handleUploadSuccess = (res: any) => {
 	console.log("上传成功:", res);
 	showOverlay.value = false;
 	axios
-		.get(
-			"http://" + state.center.ip + ":" + state.center.port + "/db/original",
-			{
-				params: {
-					session: localStorage.getItem("userSession"),
-				},
-			}
-		)
+		.get("http://" + state.center.ip + ":" + state.center.port + "/net/list", {
+			params: {
+				session: localStorage.getItem("userSession"),
+			},
+		})
 		.then((res) => {
 			console.log(res);
-			tableData.value = res.data.db_list;
+			tableData.value = res.data.net_list;
 		})
 		.catch((error) => {
 			console.error("请求数据失败:", error);
@@ -74,7 +73,7 @@ const handleUploadSuccess = (res: any) => {
 
 onMounted(async () => {
 	const res = await axios.get(
-		"http://" + state.center.ip + ":" + state.center.port + "/db/original",
+		"http://" + state.center.ip + ":" + state.center.port + "/net/list",
 		{
 			params: {
 				session: localStorage.getItem("userSession"),
@@ -83,7 +82,7 @@ onMounted(async () => {
 	);
 
 	console.log(res);
-	tableData.value = res.data.db_list;
+	tableData.value = res.data.net_list;
 });
 
 // 解析字段字符串为数组并格式化为字符串
@@ -166,25 +165,38 @@ const parseFields = (fieldString: string) => {
 		</div>
 		<div v-if="showOverlay" class="overlay">
 			<div class="overlay-content">
-				<span class="node-title">上传数据集</span>
-				<el-upload
-					ref="uploadRef"
-					class="upload-demo"
-					:action="uploadUrl"
-					:auto-upload="false"
-					:before-upload="beforeUpload"
-					:on-success="handleUploadSuccess"
-					:on-error="handleUploadError"
-					:data="{
-						hasHeader: hasHeader,
-						table_name: tableName,
-						user_id: state.user.id,
-					}"
-					accept=".py">
-					<el-button size="small" type="primary">点击上传 CSV 文件</el-button>
-				</el-upload>
-				<el-checkbox v-model="hasHeader">是否有表头</el-checkbox>
-				<el-input v-model="tableName" placeholder="数据库名称" />
+				<span class="node-title">上传深度网络模型</span>
+				<div class="net-input">
+					<span>网络名称：</span>
+					<el-input v-model="netName" placeholder="网络名称" />
+				</div>
+				<div class="net-input">
+					<span>模型输入参数量：</span>
+					<el-input v-model="inputNum" placeholder="模型输入参数量" />
+				</div>
+				<div class="net-input">
+					<span>模型输出参数量：</span>
+					<el-input v-model="outputNum" placeholder="模型输出参数量" />
+				</div>
+				<div class="net-input">
+					<span>模型文件：</span>
+					<el-upload
+						ref="uploadRef"
+						class="upload-demo"
+						:action="uploadUrl"
+						:auto-upload="false"
+						:before-upload="beforeUpload"
+						:on-success="handleUploadSuccess"
+						:on-error="handleUploadError"
+						:data="{
+							netName: netName,
+							inputNum: inputNum,
+							user_id: state.user.id,
+						}"
+						accept=".py">
+						<el-button size="small" type="primary">点击上传 py 文件</el-button>
+					</el-upload>
+				</div>
 				<div>
 					<el-button type="primary" @click="handleUpload">上传</el-button>
 					<el-button @click="showOverlay = false">关闭</el-button>
@@ -222,6 +234,7 @@ const parseFields = (fieldString: string) => {
 	height: 100%;
 	background-color: rgba(0, 0, 0, 0.5);
 	display: flex;
+
 	justify-content: center;
 	align-items: center;
 	z-index: 1000;
@@ -245,5 +258,17 @@ const parseFields = (fieldString: string) => {
 .uploaded-file-name {
 	margin-top: 10px;
 	color: #333;
+}
+
+.net-input {
+	width: 450px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+	display: flex;
+}
+.net-input span {
+	width: 200px;
+	text-align: right;
+	font-size: 18px;
 }
 </style>
