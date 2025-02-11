@@ -35,6 +35,7 @@ class DataBase(BaseModel):
     field = TextField(null=False)
     data_number = IntegerField(null=False, default=0)
     file_name = CharField(null=False)
+    detail = TextField()
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 
@@ -67,3 +68,17 @@ class RulerDetail(BaseModel):
 
     class Meta:
         table_name = 'ruler_detail'
+
+
+class Net(BaseModel):
+    id = AutoField()
+    net_name = CharField(null=False)
+    node_name = CharField(null=False)
+    input_num = IntegerField(null=False)
+    output_num = IntegerField(null=False)
+    file_name = CharField(null=False)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+
+    class Meta:
+        table_name = 'net'
