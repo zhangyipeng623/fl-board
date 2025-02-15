@@ -15,7 +15,7 @@ class LoginForm(BaseModel):
 def login(form: LoginForm):
     user = User.select().where(User.username == form.username, User.password == form.password).get()
     if(user is None):
-        raise HTTPException(status_code=401, detail="用户名或密码错误")
+        raise HTTPException(401, detail="用户名或密码错误")
     session = str(uuid.uuid4())
     user_info = json.dumps({"username": user.username, "id": user.id,"ip":user.ip,"port":user.port})
     redis.set(session, user_info, ex=60*60*24*2)
@@ -63,7 +63,7 @@ def check_session(request: Request):
     session = request.query_params.get("session")
     user_info = redis.get(session)
     if(user_info is None):
-        raise  HTTPException(status_code=401, detail="用户未登录")
+        raise  HTTPException(401, detail="用户未登录")
     return {"user_info": user_info}
 
 @router.get("/logout")

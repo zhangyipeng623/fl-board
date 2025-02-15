@@ -243,9 +243,7 @@ const handleSubmit = async () => {
 				":" +
 				state.center.port +
 				"/ruler/add?session=" +
-				localStorage.getItem("userSession") +
-				"&localSession=" +
-				localStorage.getItem("localSession"),
+				localStorage.getItem("userSession"),
 			{
 				ruler_name: rulerName.value,
 				aligned_db: alignedDb.value,
@@ -372,49 +370,28 @@ const alignedFieldArray = computed(() => {
 					fixed
 					prop="ruler_name"
 					label="对齐规则名称"
-					width="200"
 					align="center" />
 				<el-table-column
 					prop="aligned_db"
 					label="对齐数据库"
-					width="120"
 					align="center"></el-table-column
 				>/>
 				<el-table-column
 					label="原始数据库"
-					width="300"
 					header-align="center"
 					align="center">
 					<template #default="{ row }">
 						{{ parseFields(row.original_db) }}
 					</template> </el-table-column
 				>/>
-				<el-table-column
-					label="字段"
-					width="300"
-					header-align="center"
-					align="center">
+				<el-table-column label="字段" header-align="center" align="center">
 					<template #default="{ row }">
 						{{ parseFields(row.ruler_field) }}
 					</template>
 				</el-table-column>
-				<el-table-column label="对齐规则" width="200" align="center">
-					<template #default="{ row }">
-						<div v-for="item in parseRuler(row.original_db)">
-							<span @click="handelDetail(item, row)" style="cursor: pointer">{{
-								item
-							}}</span>
-						</div>
-					</template>
-				</el-table-column>
-				/>
-				<el-table-column
-					fixed="right"
-					label="操作"
-					min-width="120"
-					align="center">
+				<el-table-column fixed="right" label="对齐规则" align="center">
 					<template #header>
-						操作
+						对齐规则
 						<el-tooltip
 							class="item"
 							effect="light"
@@ -425,10 +402,12 @@ const alignedFieldArray = computed(() => {
 							</el-button>
 						</el-tooltip>
 					</template>
-					<template #default>
-						<el-button link type="primary" size="small" @click="handleClick">
-							详细
-						</el-button>
+					<template #default="{ row }">
+						<div v-for="item in parseRuler(row.original_db)">
+							<span @click="handelDetail(item, row)" style="cursor: pointer">{{
+								item
+							}}</span>
+						</div>
 					</template>
 				</el-table-column>
 			</el-table>

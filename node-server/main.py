@@ -15,12 +15,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.middleware("http")
 async def check_session(request: Request, call_next):
-    if request.url.path == "/login" or request.url.path == "/check_session" or request.url.path == "/status" or request.url.path == "/aligned/get_data":
+    if request.url.path == "/login" or request.url.path == "/check_session" or request.url.path == "/status" or request.url.path == "/aligned/get_data" or request.url.path == "/aligned/add":
         return await call_next(request)
     session = request.query_params.get("session")
     user_id = redis.get(session)
     if(user_id is None):
-        raise HTTPException(status_code=401, detail="用户未登录")
+        raise HTTPException(401, detail="用户未登录")
     return await call_next(request)
 
 # 添加 CORS 中间件

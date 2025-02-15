@@ -20,7 +20,7 @@ async def check_session(request: Request, call_next):
     session = request.query_params.get("session")
     user_info = redis.get(session)
     if(user_info is None):
-        raise HTTPException(status_code=401, detail="用户未登录")
+        raise HTTPException(401, detail="用户未登录")
     return await call_next(request)
 
 # 添加 CORS 中间件

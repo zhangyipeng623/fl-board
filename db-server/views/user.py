@@ -1,28 +1,27 @@
 from fastapi import APIRouter,HTTPException,Request
 from pydantic import BaseModel
-import json
+
 from model import User,redis
-import psutil
-import uuid
+import json, psutil, uuid
 
 
-router = APIRouter()
+user = APIRouter()
 
 class LoginForm(BaseModel):
     username: str
     password: str
 
-@router.post("/login") # 根路由
+@user.post("/login") # 根路由
 def login(form: LoginForm):
     user = User.select().where(User.username == form.username, User.password == form.password).get()
     if(user is None):
-        raise HTTPException(status_code=401, detail="用户名或密码错误")
+        raise HTTPException(401, detail="用户名或密码错误")
     session = str(uuid.uuid4())
     user_info = json.dumps({"ip": user.ip, "port": user.port,"username": user.username,"id": user.id})
     redis.set(session, user_info, ex=60*60*24*2)
     return {"ip": user.ip, "port": user.port, "session": session,"id": user.id}
 
-@router.get("/status")
+@user.get("/status")
 def get_status():
     from model import db
     from peewee import OperationalError
@@ -59,16 +58,16 @@ def get_status():
     print(status,"status")
     return {"data": status}
 
-@router.get("/check_session")
+@user.get("/check_session")
 def check_session(request: Request):
     session = request.query_params.get("session")
     user_info = redis.get(session)
     if(user_info is None):
-        raise HTTPException(status_code=401, detail="用户未登录")
+        raise HTTPException(401, detail="用户未登录")
     user_info = json.loads(user_info)
     return {"ip": user_info["ip"], "port": user_info["port"],"username": user_info["username"],"id": user_info["id"]}
 
-@router.get("/logout")
+@user.get("/logout")
 def logout(request: Request):
     session = request.query_params.get("session")
     redis.delete(session)

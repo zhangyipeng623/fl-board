@@ -27,8 +27,7 @@ class RulerInfo(BaseModel):
 
 
 @ruler.post("/add")
-def add(ruler_info: RulerInfo,request: Request):
-    local_session = request.query_params.get("localSession")
+def add(ruler_info: RulerInfo):
     ruler_list = ruler_info.ruler
     file_name = uuid.uuid4()
     original_db = ""
@@ -47,12 +46,11 @@ def add(ruler_info: RulerInfo,request: Request):
     ruler_detail = []
     for ruler in ruler_list:
         name,username = ruler.name_id.split("-")
-        print(name,username)
         node = DataBase.select().where(DataBase.username == username,DataBase.db_name == name).get()
         user = User.select().where(User.username == username,User.id==node.user_id).get()
-        res = requests.post(f"http://{user.ip}:{user.port}/aligned/add?session={local_session}&file_name={file_name}&original_file={node.file_name}",json=ruler.model_dump())
+        res = requests.post(f"http://{user.ip}:{user.port}/aligned/add?file_name={file_name}&original_file={node.file_name}",json=ruler.model_dump())
         if res.status_code != 200:
-            raise HTTPException(status_code=400, detail=f"对齐数据失败，res:{res.json().get('detail')}")
+            raise HTTPException(400, detail=f"对齐数据失败，res:{res.json().get('detail')}")
         data_count += res.json().get("data_count",0)
         op = []
         for operator in ruler.operator:
@@ -78,7 +76,7 @@ def get(operator: Operator,request: Request):
     if res.status_code == 200:
         return res.json()
     else:
-        raise HTTPException(status_code=400, detail=f"获取{op}({field})失败")
+        raise HTTPException(400, detail=f"获取{op}({field})失败")
     
 @ruler.get("/list")
 def get_ruler_list():

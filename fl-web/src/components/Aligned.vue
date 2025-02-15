@@ -62,27 +62,17 @@ const parseFields = (fieldString: string) => {
 					fixed
 					prop="aligned_db"
 					label="数据库名称"
-					width="200"
 					align="center" />
 				<el-table-column
 					label="原始数据库"
-					width="300"
 					header-align="center"
 					align="center">
 					<template #default="{ row }">
 						{{ parseFields(row.original_db) }}
 					</template> </el-table-column
 				>/>
-				<el-table-column
-					prop="data_count"
-					label="数据量"
-					width="120"
-					align="center" />
-				<el-table-column
-					label="字段"
-					width="300"
-					header-align="center"
-					align="center">
+				<el-table-column prop="data_count" label="数据量" align="center" />
+				<el-table-column label="字段" header-align="center" align="center">
 					<template #default="{ row }">
 						{{ parseFields(row.ruler_field) }}
 					</template>
@@ -91,7 +81,6 @@ const parseFields = (fieldString: string) => {
 					prop="created_at"
 					sortable
 					label="创建时间"
-					width="200"
 					align="center" />
 				<el-table-column
 					prop="updated_at"

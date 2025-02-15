@@ -26,7 +26,7 @@ def upload(request: Request,db_info: DBInfo):
     user_info = redis.get(session)
     user_info = json.loads(user_info)
     if user_info["id"] != db_info.user_id:
-        raise HTTPException(status_code=401, detail="数据不正确")
+        raise HTTPException(401, detail="数据不正确")
     else:
         try:
             fields = json.loads(db_info.field)
@@ -34,6 +34,8 @@ def upload(request: Request,db_info: DBInfo):
             for f in fields:
                 field += f + ","
             field = field[:-1]
+            if DataBase.select().where(DataBase.db_name == db_info.db_name, DataBase.username == user_info["username"]).exists():
+                raise HTTPException(400, detail="数据库已存在")
             DataBase.create(user_id=user_info["id"], 
                                 db_name=db_info.db_name, 
                                 field=field, 
@@ -44,8 +46,8 @@ def upload(request: Request,db_info: DBInfo):
                                 updated_at=datetime.now()
                                 )
             return {"message": "数据上传成功"}
-        except:
-            raise HTTPException(status_code=500, detail="数据上传失败")
+        except Exception as e:
+            raise HTTPException(500, detail=f"数据上传失败,err:{e}")
         
 @db.get("/list")
 def get_list(request: Request):

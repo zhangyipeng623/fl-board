@@ -1,14 +1,12 @@
 from fastapi import APIRouter,Form,UploadFile,File,HTTPException,Request
-from model import insert_data_from_csv
 import csv, shutil, requests,json,uuid
 from config import config
-from model import db as mysql_db
 db = APIRouter(prefix="/db")
 
 @db.post("/upload")
 def upload(user_id: int = Form(...),table_name: str = Form(...),hasHeader: bool = Form(...), file: UploadFile = File(...),request: Request=None):
     if file is None or file == "":
-        raise HTTPException(status_code=401, detail="没有上传文件")
+        raise HTTPException(401, detail="没有上传文件")
     column_name = []
     file_name = uuid.uuid4()
     file_path = f"static/uploads/{file.filename}"
@@ -45,11 +43,11 @@ def upload(user_id: int = Form(...),table_name: str = Form(...),hasHeader: bool 
             import os
             os.remove(original_file)
             os.remove(file_path)
-            raise HTTPException(status_code=402, detail="数据管理中心上传失败")     
+            raise HTTPException(402, detail=f"数据管理中心上传失败,err:{res.json().get('detail')}")     
         else:
             return {"message": "上传成功"}
     except Exception as e:
         import os
         os.remove(original_file)
         os.remove(file_path)
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(401, detail=str(e))

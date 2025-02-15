@@ -18,6 +18,7 @@ const netName = ref("");
 const inputNum = ref("");
 const outputNum = ref("");
 const detail = ref("");
+const db = ref("");
 
 const code = ref("");
 
@@ -102,7 +103,7 @@ const handleUploadSuccess = (res: any) => {
 
 onMounted(async () => {
 	const res = await axios.get(
-		"http://" + state.center.ip + ":" + state.center.port + "/net/list",
+		"http://" + state.center.ip + ":" + state.center.port + "/job/list",
 		{
 			params: {
 				session: localStorage.getItem("userSession"),
@@ -111,7 +112,7 @@ onMounted(async () => {
 	);
 
 	console.log(res);
-	tableData.value = res.data.net_list;
+	tableData.value = res.data.job_list;
 });
 </script>
 
@@ -120,28 +121,24 @@ onMounted(async () => {
 		<div class="scrollable-content">
 			<Background />
 			<el-table :data="tableData">
+				<el-table-column fixed prop="job_id" label="任务ID" align="center" />
 				<el-table-column
-					fixed
-					prop="net_name"
-					label="模型名称"
+					prop="node_name"
+					label="上传节点"
+					width="200"
 					align="center" />
-				<el-table-column prop="node_name" label="上传节点" align="center" />
-				<el-table-column prop="input_num" label="输入量" align="center" />
+				<el-table-column prop="db" label="关联数据库" align="center" />
 				<el-table-column
-					prop="output_num"
-					label="输出量"
+					prop="input_field"
+					label="输入字段"
 					header-align="center"
 					align="center" />
 				<el-table-column
-					prop="created_at"
-					sortable
-					label="创建时间"
+					prop="output_field"
+					label="输出字段"
+					header-align="center"
 					align="center" />
-				<el-table-column
-					prop="updated_at"
-					sortable
-					label="更新时间"
-					align="center" />
+				<el-table-column prop="status" label="状态" align="center" />
 				<el-table-column
 					fixed="right"
 					label="操作"
@@ -152,7 +149,7 @@ onMounted(async () => {
 						<el-tooltip
 							class="item"
 							effect="light"
-							content="添加网络模型"
+							content="新建任务"
 							placement="bottom">
 							<el-button link type="primary" size="small" @click="handleAdd">
 								<el-icon> <Plus /> </el-icon>
@@ -175,11 +172,11 @@ onMounted(async () => {
 			<div class="overlay-content">
 				<span class="node-title">上传深度网络模型</span>
 				<div class="net-input">
-					<span>网络名称：</span>
-					<el-input v-model="netName" placeholder="网络名称" />
+					<span>使用数据库名称：</span>
+					<el-input v-model="db" placeholder="使用数据库名称" />
 				</div>
 				<div class="net-input">
-					<span>模型输入参数量：</span>
+					<span>模型输入字段：</span>
 					<el-input v-model="inputNum" placeholder="模型输入参数量" />
 				</div>
 				<div class="net-input">
@@ -210,7 +207,6 @@ onMounted(async () => {
 						accept=".py">
 						<el-button size="small" type="primary">点击上传 py 文件</el-button>
 						<el-tooltip
-							effect="light"
 							class="item"
 							content="python文件中需要包含Net类和DataSet类"
 							placement="right">
@@ -234,7 +230,9 @@ onMounted(async () => {
 					<!-- 将 code 绑定并以高亮显示 -->
 				</div>
 				<div>
-					<el-button @click="showNetDetail = false">关闭</el-button>
+					<el-button style="margin-top: 10px" @click="showNetDetail = false"
+						>关闭</el-button
+					>
 				</div>
 			</div>
 		</div>

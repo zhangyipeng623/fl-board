@@ -54,7 +54,7 @@ def add_aligned(ruler: Ruler,request: Request):
             if r.operator == "avg" or r.operator == "max" or r.operator == "min":
                 res = requests.get(f"http://{config.center_host}:{config.center_port}/ruler/get",json=r.model_dump())
                 if res.status_code != 200:
-                    raise HTTPException(status_code=401, detail=f"{res.json().get('detail')}")
+                    raise HTTPException(401, detail=f"{res.json().get('detail')}")
                 else:
                     r.data = res.json()
             elif r.operator == "+" or r.operator == "-" or r.operator == "*" or r.operator == "/" or r.operator == "=":
@@ -84,7 +84,7 @@ def add_aligned(ruler: Ruler,request: Request):
                         elif r.operator == "/":
                             aligned_row[r.field_name_id] = div(*data)
                     except Exception as e:
-                        raise HTTPException(status_code=401, detail=f"{e}")
+                        raise HTTPException(401, detail=f"{e}")
                 elif r.operator == "=":
                     filed = r.field_value.split(",")[0]
                     aligned_row[r.field_name_id] = row[filed]

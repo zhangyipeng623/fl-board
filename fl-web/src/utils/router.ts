@@ -93,6 +93,11 @@ const router = createRouter({
       path: '/net',
       name: 'net',
       component: () => import('@/views/NetView.vue')
+    },
+    {
+      path:'/job',
+      name:'job',
+      component:()=>import('@/views/JobView.vue')
     }
   ]
   

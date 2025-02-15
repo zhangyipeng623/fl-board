@@ -77,8 +77,23 @@ class Net(BaseModel):
     input_num = IntegerField(null=False)
     output_num = IntegerField(null=False)
     file_name = CharField(null=False)
+    detail = TextField(null=True)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
         table_name = 'net'
+
+class Job(BaseModel):
+    id=AutoField()
+    job_id = CharField(null=False)
+    node_name = CharField(null=False)
+    net_name = CharField(null=False)
+    net_id = IntegerField(null=False)
+    input_field = CharField(null=False)
+    output_field = CharField(null=False)
+    status = CharField(null=False)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+    class Meta:
+        table_name = 'job'

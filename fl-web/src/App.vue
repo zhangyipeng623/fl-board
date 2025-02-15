@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
 import { RouterView, useRouter } from "vue-router";
 import {
 	Document,
 	Menu as IconMenu,
-	Location,
-	Setting,
+	Coin,
+	Odometer,
 } from "@element-plus/icons-vue";
+
 import cuc2 from "@/assets/images/cuc_2.png"; /* 大图标 */
 const router = useRouter();
 const handleOpen = (key: string, keyPath: string[]) => {
@@ -37,6 +37,10 @@ const goNetInfo = () => {
 	console.log("goNetInfo");
 	router.push({ path: "/net" });
 };
+const goJob = () => {
+	console.log("goJob");
+	router.push({ path: "/job" });
+};
 </script>
 
 <template>
@@ -62,7 +66,7 @@ const goNetInfo = () => {
 				</el-menu-item>
 				<el-sub-menu index="2">
 					<template #title>
-						<el-icon><location /></el-icon>
+						<el-icon><Coin /></el-icon>
 						<span>数据集管理</span>
 					</template>
 					<el-menu-item index="2-1" @click="goOriginal"
@@ -77,9 +81,9 @@ const goNetInfo = () => {
 					<el-icon><document /></el-icon>
 					<span>网络模型管理</span>
 				</el-menu-item>
-				<el-menu-item index="4">
-					<el-icon><setting /></el-icon>
-					<span>Navigator Four</span>
+				<el-menu-item index="4" @click="goJob">
+					<el-icon><Odometer /></el-icon>
+					<span>任务</span>
 				</el-menu-item>
 			</el-menu>
 		</el-col>
