@@ -14,9 +14,16 @@ const showOverlay = ref(false);
 const showNetDetail = ref(false);
 const isLoad = ref(false);
 
+interface DB {
+	id: number;
+	aligned_db: string;
+	field: string[];
+}
+const db_list = ref<DB[]>([]);
+
 const netName = ref("");
-const inputNum = ref("");
-const outputNum = ref("");
+const inputField = ref([]);
+const outputField = ref([]);
 const detail = ref("");
 const db = ref("");
 
@@ -34,7 +41,7 @@ const uploadUrl = computed(() => {
 });
 const netDetail = (net_id: number) => {
 	showNetDetail.value = true;
-	const res = axios
+	axios
 		.get(
 			"http://" + state.center.ip + ":" + state.center.port + "/net/detail",
 			{
@@ -60,6 +67,23 @@ const netDetail = (net_id: number) => {
 };
 
 const handleAdd = () => {
+	const res = axios
+		.get("http://" + state.center.ip + ":" + state.center.port + "/db/list", {
+			params: {
+				session: localStorage.getItem("userSession"),
+			},
+		})
+		.then((res) => {
+			console.log(res);
+			if (res.status == 200) {
+				db_list.value = res.data.db_list;
+			} else {
+				alert("数据库列表获取失败");
+			}
+		})
+		.catch((error) => {
+			console.error("请求数据失败:", error);
+		});
 	showOverlay.value = true;
 };
 
@@ -170,22 +194,40 @@ onMounted(async () => {
 		</div>
 		<div v-if="showOverlay" class="overlay">
 			<div class="overlay-content">
-				<span class="node-title">上传深度网络模型</span>
+				<span class="node-title">新建任务</span>
 				<div class="net-input">
 					<span>使用数据库名称：</span>
-					<el-input v-model="db" placeholder="使用数据库名称" />
+					<el-select v-model="db" placeholder="请选择数据库名称">
+						<el-option
+							v-for="item in db_list"
+							:key="item.id"
+							:label="item.aligned_db"
+							:value="item.aligned_db" />
+					</el-select>
 				</div>
 				<div class="net-input">
 					<span>模型输入字段：</span>
-					<el-input v-model="inputNum" placeholder="模型输入参数量" />
+					<el-select v-model="inputField" placeholder="模型输入字段" multiple>
+						<el-option
+							v-for="item in db_list"
+							:key="item.id"
+							:label="item.field"
+							:value="item.field" />
+					</el-select>
 				</div>
 				<div class="net-input">
-					<span>模型输出参数量：</span>
-					<el-input v-model="outputNum" placeholder="模型输出参数量" />
+					<span>模型输出字段：</span>
+					<el-select v-model="inputField" placeholder="模型输入字段" multiple>
+						<el-option
+							v-for="item in db_list"
+							:key="item.id"
+							:label="item.field"
+							:value="item.field" />
+					</el-select>
 				</div>
 				<div class="net-input">
-					<span>模型描述：</span>
-					<el-input v-model="detail" placeholder="模型描述" />
+					<span>任务描述：</span>
+					<el-input v-model="detail" placeholder="任务描述" />
 				</div>
 				<div class="net-input">
 					<span>模型文件：</span>
@@ -199,8 +241,8 @@ onMounted(async () => {
 						:on-error="handleUploadError"
 						:data="{
 							netName: netName,
-							inputNum: inputNum,
-							outputNum: outputNum,
+							inputField: inputField,
+							outputField: outputField,
 							detail: detail,
 							user_id: state.user.id,
 						}"

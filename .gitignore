@@ -6,3 +6,5 @@ FATE*/
 各种报告/
 .DS_Store
 .DS_Store/
+.cursor
+.vscode
