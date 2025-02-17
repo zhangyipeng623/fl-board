@@ -7,6 +7,7 @@ const title = ref("对齐数据集");
 
 <template>
 	<main>
+
 		<Head :title="title"></Head>
 		<Aligned />
 	</main>

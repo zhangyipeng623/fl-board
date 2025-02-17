@@ -2,36 +2,11 @@
 import Background from "./Background.vue";
 import { onMounted, ref } from "vue";
 import { center } from "@/utils/utils";
-import type { UploadInstance } from "element-plus";
 
 const alignedList = ref([]);
-const showOverlay = ref(false);
-
-
-const handleAdd = () => {
-	showOverlay.value = true;
-};
-
-const beforeUpload = (file: File): boolean => {
-	const isCSV = file.type === "text/csv";
-	if (!isCSV) {
-		alert("上传文件只能是 CSV 格式!");
-		return false;
-	}
-	return true;
-};
-
-const uploadRef = ref<UploadInstance>();
 
 onMounted(async () => {
-	const res = await center.get(
-		"/ruler/aligned",
-		{
-			params: {
-				session: localStorage.getItem("userSession"),
-			},
-		}
-	);
+	const res = await center.get("/ruler/aligned",);
 
 	console.log(res.data.aligned_data);
 	alignedList.value = res.data.aligned_data;
@@ -53,35 +28,19 @@ const parseFields = (fieldString: string) => {
 		<div class="scrollable-content">
 			<Background />
 			<el-table :data="alignedList">
-				<el-table-column
-					fixed
-					prop="aligned_db"
-					label="数据库名称"
-					align="center" />
-				<el-table-column
-					label="原始数据库"
-					header-align="center"
-					align="center">
+				<el-table-column fixed prop="aligned_db" label="数据库名称" align="center" />
+				<el-table-column label="原始数据库" header-align="center" align="center">
 					<template #default="{ row }">
 						{{ parseFields(row.original_db) }}
-					</template> </el-table-column
-				>/>
+					</template> </el-table-column>/>
 				<el-table-column prop="data_count" label="数据量" align="center" />
 				<el-table-column label="字段" header-align="center" align="center">
 					<template #default="{ row }">
 						{{ parseFields(row.ruler_field) }}
 					</template>
 				</el-table-column>
-				<el-table-column
-					prop="created_at"
-					sortable
-					label="创建时间"
-					align="center" />
-				<el-table-column
-					prop="updated_at"
-					sortable
-					label="更新时间"
-					align="center" />
+				<el-table-column prop="created_at" sortable label="创建时间" align="center" />
+				<el-table-column prop="updated_at" sortable label="更新时间" align="center" />
 			</el-table>
 		</div>
 	</div>
@@ -97,16 +56,19 @@ const parseFields = (fieldString: string) => {
 	border-radius: 10px;
 	height: calc(100vh - 80px);
 }
+
 .scrollable-content {
 	height: 100%;
 	width: auto;
 }
+
 .el-table {
 	background-color: rgba(255, 255, 255, 0.4);
 	border-radius: 10px;
 	width: 100%;
 	height: 100%;
 }
+
 .overlay {
 	position: fixed;
 	top: 0;
@@ -119,6 +81,7 @@ const parseFields = (fieldString: string) => {
 	align-items: center;
 	z-index: 1000;
 }
+
 .overlay-content {
 	background: white;
 	padding: 20px;
@@ -127,14 +90,17 @@ const parseFields = (fieldString: string) => {
 	flex-direction: column;
 	align-items: center;
 }
+
 .button-container {
 	margin-top: 20px;
 }
+
 .node-title {
 	font-size: 30px;
 	font-weight: bold;
 	text-align: center;
 }
+
 .uploaded-file-name {
 	margin-top: 10px;
 	color: #333;

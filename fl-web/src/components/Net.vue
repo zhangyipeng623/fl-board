@@ -120,51 +120,25 @@ onMounted(async () => {
 		<div class="scrollable-content">
 			<Background />
 			<el-table :data="tableData">
-				<el-table-column
-					fixed
-					prop="net_name"
-					label="模型名称"
-					align="center" />
+				<el-table-column fixed prop="net_name" label="模型名称" align="center" />
 				<el-table-column prop="node_name" label="上传节点" align="center" />
 				<el-table-column prop="input_num" label="输入量" align="center" />
-				<el-table-column
-					prop="output_num"
-					label="输出量"
-					header-align="center"
-					align="center" />
-				<el-table-column
-					prop="created_at"
-					sortable
-					label="创建时间"
-					align="center" />
-				<el-table-column
-					prop="updated_at"
-					sortable
-					label="更新时间"
-					align="center" />
-				<el-table-column
-					fixed="right"
-					label="操作"
-					min-width="120"
-					align="center">
+				<el-table-column prop="output_num" label="输出量" header-align="center" align="center" />
+				<el-table-column prop="created_at" sortable label="创建时间" align="center" />
+				<el-table-column prop="updated_at" sortable label="更新时间" align="center" />
+				<el-table-column fixed="right" label="操作" min-width="120" align="center">
 					<template #header>
 						操作
-						<el-tooltip
-							class="item"
-							effect="light"
-							content="添加网络模型"
-							placement="bottom">
+						<el-tooltip class="item" effect="light" content="添加网络模型" placement="bottom">
 							<el-button link type="primary" size="small" @click="handleAdd">
-								<el-icon> <Plus /> </el-icon>
+								<el-icon>
+									<Plus />
+								</el-icon>
 							</el-button>
 						</el-tooltip>
 					</template>
 					<template #default="{ row }">
-						<el-button
-							link
-							type="primary"
-							size="small"
-							@click="netDetail(row.id)">
+						<el-button link type="primary" size="small" @click="netDetail(row.id)">
 							详细
 						</el-button>
 					</template>
@@ -192,28 +166,17 @@ onMounted(async () => {
 				</div>
 				<div class="net-input">
 					<span>模型文件：</span>
-					<el-upload
-						ref="uploadRef"
-						class="upload-demo"
-						:action="uploadUrl"
-						:auto-upload="false"
-						:before-upload="beforeUpload"
-						:on-success="handleUploadSuccess"
-						:on-error="handleUploadError"
+					<el-upload ref="uploadRef" class="upload-demo" :action="uploadUrl" :auto-upload="false"
+						:before-upload="beforeUpload" :on-success="handleUploadSuccess" :on-error="handleUploadError"
 						:data="{
 							netName: netName,
 							inputNum: inputNum,
 							outputNum: outputNum,
 							detail: detail,
 							user_id: state.user.id,
-						}"
-						accept=".py">
+						}" accept=".py">
 						<el-button size="small" type="primary">点击上传 py 文件</el-button>
-						<el-tooltip
-							effect="light"
-							class="item"
-							content="python文件中需要包含Net类和DataSet类"
-							placement="right">
+						<el-tooltip effect="light" class="item" content="python文件中需要包含Net类和DataSet类" placement="right">
 							<el-icon style="margin-left: 10px">
 								<QuestionFilled />
 							</el-icon>
@@ -251,16 +214,19 @@ onMounted(async () => {
 	border-radius: 10px;
 	height: calc(100vh - 80px);
 }
+
 .scrollable-content {
 	height: 100%;
 	width: auto;
 }
+
 .el-table {
 	background-color: rgba(255, 255, 255, 0.4);
 	border-radius: 10px;
 	width: 100%;
 	height: 100%;
 }
+
 .overlay {
 	position: fixed;
 	top: 0;
@@ -273,6 +239,7 @@ onMounted(async () => {
 	align-items: center;
 	z-index: 1000;
 }
+
 .overlay-content {
 	background: white;
 	padding: 20px;
@@ -281,14 +248,17 @@ onMounted(async () => {
 	flex-direction: column;
 	align-items: center;
 }
+
 .button-container {
 	margin-top: 20px;
 }
+
 .node-title {
 	font-size: 30px;
 	font-weight: bold;
 	text-align: center;
 }
+
 .uploaded-file-name {
 	margin-top: 10px;
 	color: #333;
@@ -300,6 +270,7 @@ onMounted(async () => {
 	margin-bottom: 5px;
 	display: flex;
 }
+
 .net-input span {
 	width: 200px;
 	text-align: right;
@@ -308,11 +279,17 @@ onMounted(async () => {
 
 .code-container {
 	width: 800px;
-	height: 600px; /* 设置容器高度，可以根据需要调整 */
-	overflow-y: auto; /* 允许垂直滚动 */
-	background-color: #f5f5f5; /* 给容器一个背景色，以便更好地查看代码 */
-	border: 1px solid #ccc; /* 可选：添加边框以分隔内容 */
-	border-radius: 5px; /* 可选：添加圆角 */
-	padding: 10px; /* 可选：添加内边距 */
+	height: 600px;
+	/* 设置容器高度，可以根据需要调整 */
+	overflow-y: auto;
+	/* 允许垂直滚动 */
+	background-color: #f5f5f5;
+	/* 给容器一个背景色，以便更好地查看代码 */
+	border: 1px solid #ccc;
+	/* 可选：添加边框以分隔内容 */
+	border-radius: 5px;
+	/* 可选：添加圆角 */
+	padding: 10px;
+	/* 可选：添加内边距 */
 }
 </style>

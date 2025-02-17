@@ -1,14 +1,20 @@
-from fastapi import APIRouter,Request
+from fastapi import APIRouter, Request
 from model import User
 import requests
 
 node = APIRouter(prefix="/node")
 
+
 @node.get("/status")
-def get_node(request: Request,username: str = None):
-    user_list = User.select(User.username, User.ip, User.port).where(User.username != username).order_by(User.created_at.desc()).dicts()
+def get_node(request: Request, username: str = None):
+    user_list = (
+        User.select(User.username, User.ip, User.port)
+        .where(User.username != username)
+        .order_by(User.created_at.desc())
+        .dicts()
+    )
     user_list = list(user_list)
-    session = request.query_params.get("session")
+    session = request.headers.get("session")
     for user in user_list:
         user["name"] = user["username"]
         url = f"http://{user['ip']}:{user['port']}/status?session={session}"
@@ -20,5 +26,3 @@ def get_node(request: Request,username: str = None):
         except:
             user["is_connect"] = False
     return {"user_list": user_list}
-
-

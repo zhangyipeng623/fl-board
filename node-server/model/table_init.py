@@ -2,15 +2,14 @@ from peewee import *
 import datetime
 
 
-db = MySQLDatabase("fl", 
-                    user="root",
-                    host="localhost", 
-                    password="password",
-                    charset='utf8mb4')
+db = MySQLDatabase(
+    "fl", user="root", host="localhost", password="password", charset="utf8mb4"
+)
+
 
 class BaseModel(Model):
     class Meta:
-        database = db  
+        database = db
 
 
 class User(BaseModel):
@@ -23,11 +22,12 @@ class User(BaseModel):
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
-        table_name = 'users' 
-    
+        table_name = "users"
+
 
 def init_table():
     db.create_tables([User])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     init_table()

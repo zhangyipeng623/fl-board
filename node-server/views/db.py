@@ -1,10 +1,18 @@
-from fastapi import APIRouter,Form,UploadFile,File,HTTPException,Request
-import csv, shutil, requests,json,uuid
+from fastapi import APIRouter, Form, UploadFile, File, HTTPException, Request
+import csv, shutil, requests, json, uuid
 from config import config
+
 db = APIRouter(prefix="/db")
 
+
 @db.post("/upload")
-def upload(user_id: int = Form(...),table_name: str = Form(...),hasHeader: bool = Form(...), file: UploadFile = File(...),request: Request=None):
+def upload(
+    user_id: int = Form(...),
+    table_name: str = Form(...),
+    hasHeader: bool = Form(...),
+    file: UploadFile = File(...),
+    request: Request = None,
+):
     if file is None or file == "":
         raise HTTPException(401, detail="没有上传文件")
     column_name = []
@@ -27,27 +35,32 @@ def upload(user_id: int = Form(...),table_name: str = Form(...),hasHeader: bool 
         for row in reader:
             writer.writerow(row)
             data_count += 1
-        
+
     try:
         # 获得文件中数据量
-        db_info= {
+        db_info = {
             "user_id": user_id,
             "db_name": table_name,
             "data_count": data_count,
             "field": json.dumps(column_name),
-            "file_name": str(file_name)
+            "file_name": str(file_name),
         }
-        user_session = request.query_params.get("userSession")
-        res = requests.post(f"http://{config.center_host}:{config.center_port}/db/upload?session={user_session}",json=db_info)
+        user_session = request.headers.get("session")
+        res = requests.post(
+            f"http://{config.center_host}:{config.center_port}/db/upload",
+            json=db_info,
+            headers={"session": user_session},
+        )
         if res.status_code != 200:
-            import os
-            os.remove(original_file)
-            os.remove(file_path)
-            raise HTTPException(402, detail=f"数据管理中心上传失败,err:{res.json().get('detail')}")     
+            raise HTTPException(402, detail=f"数据管理中心上传失败,err:{res.text}")
         else:
+            import os
+
+            os.remove(file_path)
             return {"message": "上传成功"}
     except Exception as e:
         import os
+
         os.remove(original_file)
         os.remove(file_path)
         raise HTTPException(401, detail=str(e))

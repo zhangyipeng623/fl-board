@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterView, useRouter } from "vue-router";
 import { defineProps } from "vue";
-import { center ,user} from "@/utils/utils";
+import { center, user } from "@/utils/utils";
 import { state } from "@/utils/settings"
 import head from "@/assets/images/head.png";
 const router = useRouter();
@@ -17,17 +17,9 @@ const user_click = () => {
 const logout = () => {
 	console.log("logout");
 	center
-		.get("/logout", {
-			params: {
-				session: localStorage.getItem("userSession"),
-			},
-		})
+		.get("/logout", {})
 		.then(() => {
-			user.get( "/logout", {
-				params: {
-					session: localStorage.getItem("localSession"),
-				},
-			});
+			user.get("/logout");
 		})
 		.catch((error) => {
 			console.error("Error logging out:", error);
@@ -47,19 +39,14 @@ const { title } = defineProps(["title"]);
 			{{ title }}
 		</h1>
 		<el-dropdown size="large" type="primary">
-			<el-avatar
-				class="user-avatar"
-				@click="user_click"
-				:src = head />
+			<el-avatar class="user-avatar" @click="user_click" :src=head />
 			<template #dropdown>
 				<el-dropdown-menu v-if="state.user.is_connect">
 					<el-dropdown-item>{{ state.user.name }}</el-dropdown-item>
 					<el-dropdown-item @click="logout">登出</el-dropdown-item>
 				</el-dropdown-menu>
 				<el-dropdown-menu v-else>
-					<el-dropdown-item @click="router.push('/login')"
-						>登录</el-dropdown-item
-					>
+					<el-dropdown-item @click="router.push('/login')">登录</el-dropdown-item>
 				</el-dropdown-menu>
 			</template>
 		</el-dropdown>
@@ -80,9 +67,11 @@ const { title } = defineProps(["title"]);
 	align-items: center;
 	z-index: 10;
 }
+
 .title {
 	margin-left: 10px;
 }
+
 .user-avatar {
 	margin-right: 5px;
 	cursor: pointer;

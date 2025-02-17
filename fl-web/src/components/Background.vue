@@ -5,7 +5,6 @@
 <style lang="css" scoped>
 .background_inner {
 	margin-left: 20%;
-
 	margin-top: 25px;
 	position: fixed;
 	left: 0;

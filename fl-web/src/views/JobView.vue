@@ -7,6 +7,7 @@ const title = ref("任务");
 
 <template>
 	<main>
+
 		<Head :title="title"></Head>
 		<Job />
 	</main>

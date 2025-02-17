@@ -1,18 +1,20 @@
 from peewee import *
 from config import config
 
-db = MySQLDatabase(config.Mysql_db, 
-                    user=config.Mysql_user,
-                    host=config.Mysql_host, 
-                    password=config.Mysql_password,
-                    charset='utf8mb4',
-                    connect_timeout=10,)
+db = MySQLDatabase(
+    config.Mysql_db,
+    user=config.Mysql_user,
+    host=config.Mysql_host,
+    password=config.Mysql_password,
+    charset="utf8mb4",
+    connect_timeout=10,
+)
 import datetime
 
 
 class BaseModel(Model):
     class Meta:
-        database = db  
+        database = db
 
 
 class User(BaseModel):
@@ -25,7 +27,8 @@ class User(BaseModel):
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
-        table_name = 'users'  
+        table_name = "users"
+
 
 class DataBase(BaseModel):
     id = AutoField()
@@ -40,8 +43,7 @@ class DataBase(BaseModel):
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
-        table_name = 'data_base'
-
+        table_name = "data_base"
 
 
 class Ruler(BaseModel):
@@ -56,7 +58,8 @@ class Ruler(BaseModel):
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
-        table_name = 'ruler'
+        table_name = "ruler"
+
 
 class RulerDetail(BaseModel):
     id = AutoField()
@@ -67,7 +70,7 @@ class RulerDetail(BaseModel):
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
-        table_name = 'ruler_detail'
+        table_name = "ruler_detail"
 
 
 class Net(BaseModel):
@@ -82,10 +85,11 @@ class Net(BaseModel):
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
-        table_name = 'net'
+        table_name = "net"
+
 
 class Job(BaseModel):
-    id=AutoField()
+    id = AutoField()
     job_id = CharField(null=False)
     node_name = CharField(null=False)
     db_id = IntegerField(null=False)
@@ -97,5 +101,6 @@ class Job(BaseModel):
     status = CharField(null=False)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
+
     class Meta:
-        table_name = 'job'
+        table_name = "job"

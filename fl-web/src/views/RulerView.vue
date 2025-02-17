@@ -7,6 +7,7 @@ const title = ref("对齐规则");
 
 <template>
 	<main>
+
 		<Head :title="title"></Head>
 		<Ruler />
 	</main>

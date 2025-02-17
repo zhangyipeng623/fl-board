@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Background from "./Background.vue";
-import { onMounted, ref, watch} from "vue";
+import { onMounted, ref, watch } from "vue";
 import { center } from "@/utils/utils";
 import { Plus } from "@element-plus/icons-vue";
 import Prism from "prismjs";
@@ -116,58 +116,58 @@ const get_db_field = (db: number) => {
 
 const handleUpload = async () => {
 	await center
-	.post(
-		"/job/add",{
+		.post(
+			"/job/add", {
 			db: db.value,
 			input_field: inputField.value,
 			output_field: outputField.value,
 			net: net.value,
 		},
-		{
-			headers: {
-				'Content-Type': 'application/json' // 你可以根据需要添加其他请求头
-			},
-			params: {
-				'session': localStorage.getItem("userSession"), // 添加请求头参数
+			{
+				headers: {
+					'Content-Type': 'application/json' // 你可以根据需要添加其他请求头
+				},
+				params: {
+					'session': localStorage.getItem("userSession"), // 添加请求头参数
+				}
 			}
-		}
-		
-	)
-	.then((res) => {
-		if (res.status == 200) {
-			inputField.value = [];
-			outputField.value = [];
-			db.value = undefined;
-			alert("任务上传成功")
-			showOverlay.value = false;
-		}
-	})
-	.catch((error) => {
-		alert("任务上传失败"+ error)
-	});
+
+		)
+		.then((res) => {
+			if (res.status == 200) {
+				inputField.value = [];
+				outputField.value = [];
+				db.value = undefined;
+				alert("任务上传成功")
+				showOverlay.value = false;
+			}
+		})
+		.catch((error) => {
+			alert("任务上传失败" + error)
+		});
 };
 
 onMounted(async () => {
 	await center
-	.get(
-		"/job/list",
-		{
-			params: {
-				session: localStorage.getItem("userSession"),
-			},
-		}
-	)
-	.then((res) => {
-		if(res.status == 200){
-			tableData.value = res.data.job_list;
-		}
-		else{
-			alert("任务列表获取失败");
-		}
-	})
-	.catch((error) => {
-		console.error("请求数据失败:", error);
-	});
+		.get(
+			"/job/list",
+			{
+				params: {
+					session: localStorage.getItem("userSession"),
+				},
+			}
+		)
+		.then((res) => {
+			if (res.status == 200) {
+				tableData.value = res.data.job_list;
+			}
+			else {
+				alert("任务列表获取失败");
+			}
+		})
+		.catch((error) => {
+			console.error("请求数据失败:", error);
+		});
 });
 </script>
 
@@ -177,46 +177,24 @@ onMounted(async () => {
 			<Background />
 			<el-table :data="tableData">
 				<el-table-column fixed prop="job_id" label="任务ID" align="center" />
-				<el-table-column
-					prop="node_name"
-					label="上传节点"
-					width="200"
-					align="center" />
+				<el-table-column prop="node_name" label="上传节点" width="200" align="center" />
 				<el-table-column prop="db_name" label="关联数据库" align="center" />
-				<el-table-column
-					prop="input_field"
-					label="输入字段"
-					header-align="center"
-					align="center" />
-				<el-table-column
-					prop="output_field"
-					label="输出字段"
-					header-align="center"
-					align="center" />
+				<el-table-column prop="input_field" label="输入字段" header-align="center" align="center" />
+				<el-table-column prop="output_field" label="输出字段" header-align="center" align="center" />
 				<el-table-column prop="status" label="状态" align="center" />
-				<el-table-column
-					fixed="right"
-					label="操作"
-					min-width="120"
-					align="center">
+				<el-table-column fixed="right" label="操作" min-width="120" align="center">
 					<template #header>
 						操作
-						<el-tooltip
-							class="item"
-							effect="light"
-							content="新建任务"
-							placement="bottom">
+						<el-tooltip class="item" effect="light" content="新建任务" placement="bottom">
 							<el-button link type="primary" size="small" @click="handleAdd">
-								<el-icon> <Plus /> </el-icon>
+								<el-icon>
+									<Plus />
+								</el-icon>
 							</el-button>
 						</el-tooltip>
 					</template>
 					<template #default="{ row }">
-						<el-button
-							link
-							type="primary"
-							size="small"
-							@click="netDetail(row.id)">
+						<el-button link type="primary" size="small" @click="netDetail(row.id)">
 							详细
 						</el-button>
 					</template>
@@ -229,41 +207,25 @@ onMounted(async () => {
 				<div class="net-input">
 					<span>使用网络模型名称：</span>
 					<el-select v-model="net" placeholder="请选择数据库名称">
-						<el-option
-							v-for="item in netList"
-							:key="item.id"
-							:label="item.net_name"
-							:value="item.id" />
+						<el-option v-for="item in netList" :key="item.id" :label="item.net_name" :value="item.id" />
 					</el-select>
 				</div>
 				<div class="net-input">
 					<span>使用数据库名称：</span>
 					<el-select v-model="db" placeholder="请选择数据库名称">
-						<el-option
-							v-for="item in db_list"
-							:key="item.id"
-							:label="item.aligned_db"
-							:value="item.id" />
+						<el-option v-for="item in db_list" :key="item.id" :label="item.aligned_db" :value="item.id" />
 					</el-select>
 				</div>
 				<div class="net-input">
 					<span>模型输入字段：</span>
 					<el-select v-model="inputField" placeholder="模型输入字段" multiple>
-						<el-option
-							v-for="item in Field"
-							:key="item"
-							:label="item"
-							:value="item" />
+						<el-option v-for="item in Field" :key="item" :label="item" :value="item" />
 					</el-select>
 				</div>
 				<div class="net-input">
 					<span>模型输出字段：</span>
 					<el-select v-model="outputField" placeholder="模型输入字段" multiple>
-						<el-option
-							v-for="item in Field"
-							:key="item"
-							:label="item"
-							:value="item" />
+						<el-option v-for="item in Field" :key="item" :label="item" :value="item" />
 					</el-select>
 				</div>
 				<div>
@@ -280,9 +242,7 @@ onMounted(async () => {
 					<!-- 将 code 绑定并以高亮显示 -->
 				</div>
 				<div>
-					<el-button style="margin-top: 10px" @click="showNetDetail = false"
-						>关闭</el-button
-					>
+					<el-button style="margin-top: 10px" @click="showNetDetail = false">关闭</el-button>
 				</div>
 			</div>
 		</div>
@@ -299,16 +259,19 @@ onMounted(async () => {
 	border-radius: 10px;
 	height: calc(100vh - 80px);
 }
+
 .scrollable-content {
 	height: 100%;
 	width: auto;
 }
+
 .el-table {
 	background-color: rgba(255, 255, 255, 0.4);
 	border-radius: 10px;
 	width: 100%;
 	height: 100%;
 }
+
 .overlay {
 	position: fixed;
 	top: 0;
@@ -321,6 +284,7 @@ onMounted(async () => {
 	align-items: center;
 	z-index: 1000;
 }
+
 .overlay-content {
 	background: white;
 	padding: 20px;
@@ -329,14 +293,17 @@ onMounted(async () => {
 	flex-direction: column;
 	align-items: center;
 }
+
 .button-container {
 	margin-top: 20px;
 }
+
 .node-title {
 	font-size: 30px;
 	font-weight: bold;
 	text-align: center;
 }
+
 .uploaded-file-name {
 	margin-top: 10px;
 	color: #333;
@@ -348,6 +315,7 @@ onMounted(async () => {
 	margin-bottom: 5px;
 	display: flex;
 }
+
 .net-input span {
 	width: 200px;
 	text-align: right;
@@ -356,11 +324,17 @@ onMounted(async () => {
 
 .code-container {
 	width: 800px;
-	height: 600px; /* 设置容器高度，可以根据需要调整 */
-	overflow-y: auto; /* 允许垂直滚动 */
-	background-color: #f5f5f5; /* 给容器一个背景色，以便更好地查看代码 */
-	border: 1px solid #ccc; /* 可选：添加边框以分隔内容 */
-	border-radius: 5px; /* 可选：添加圆角 */
-	padding: 10px; /* 可选：添加内边距 */
+	height: 600px;
+	/* 设置容器高度，可以根据需要调整 */
+	overflow-y: auto;
+	/* 允许垂直滚动 */
+	background-color: #f5f5f5;
+	/* 给容器一个背景色，以便更好地查看代码 */
+	border: 1px solid #ccc;
+	/* 可选：添加边框以分隔内容 */
+	border-radius: 5px;
+	/* 可选：添加圆角 */
+	padding: 10px;
+	/* 可选：添加内边距 */
 }
 </style>

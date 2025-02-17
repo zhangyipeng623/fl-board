@@ -7,6 +7,7 @@ const title = ref("网络模型管理");
 
 <template>
 	<main>
+
 		<Head :title="title"></Head>
 		<Net />
 	</main>

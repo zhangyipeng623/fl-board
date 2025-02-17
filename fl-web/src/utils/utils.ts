@@ -16,7 +16,7 @@ const user = axios.create({
 });
 
 user.interceptors.request.use((config) => {
-    config.headers['session'] = localStorage.getItem("localSession");
+    config.headers['session'] = localStorage.getItem("userSession");
     return config;
 }, (error) => {
     return Promise.reject(error);
@@ -26,12 +26,7 @@ export {center,user};
 
 export const getNodeStatus = async () => {
     try{
-        const res = await center.get("/node/status",{
-            params:{
-                session: localStorage.getItem("userSession"),
-                username: state.user.name,
-            },
-        });
+        const res = await center.get("/node/status");
         state.updateDbNode(res.data.user_list);
         state.updateCenterInfo(true);
         console.log(res.data);

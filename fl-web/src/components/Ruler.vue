@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import Background from "./Background.vue";
 import { onMounted, ref, computed } from "vue";
-import axios from "axios";
+import { center } from "@/utils/utils";
+
 import { Plus } from "@element-plus/icons-vue";
 import { ElTreeSelect } from "element-plus";
-import { state } from "@/utils/settings";
 import type Node from "element-plus/es/components/tree/src/model/node";
 
 interface Operator {
@@ -66,14 +66,7 @@ const loadNode = async (node: any, resolve: any) => {
 	if (node.data.isLeaf) return resolve([]);
 	if (node.level === 0) {
 		try {
-			const res = await axios.get(
-				"http://" + state.center.ip + ":" + state.center.port + "/node/list",
-				{
-					params: {
-						session: localStorage.getItem("userSession"),
-					},
-				}
-			);
+			const res = await center.get("/node/list");
 			if (res.status === 200) {
 				const formattedNodeList = res.data.node_list.map((item: any) => ({
 					...item,
@@ -89,12 +82,10 @@ const loadNode = async (node: any, resolve: any) => {
 		}
 	} else if (node.level === 1) {
 		try {
-			const res = await axios.get(
-				"http://" + state.center.ip + ":" + state.center.port + "/db/list",
+			const res = await center.get("/db/list",
 				{
 					params: {
 						node_id: node.data.value,
-						session: localStorage.getItem("userSession"),
 					},
 				}
 			);
@@ -113,27 +104,39 @@ const loadNode = async (node: any, resolve: any) => {
 	}
 };
 
-const handleLoad = async (node: Node, resolve: any) => {
+const handleLoad = async (node: Node, resolve: any, index: number) => {
 	if (node.isLeaf) {
 		return resolve([]);
 	}
 	if (node.level == 0) {
 		const originalDbList = [];
-		for (let i = 0; i < originalDb.value.length; i++) {
-			originalDbList.push({
-				value: originalDb.value[i],
-				label: originalDb.value[i],
+		if (selectedOperators.value[index] === "+" ||
+			selectedOperators.value[index] === "-" ||
+			selectedOperators.value[index] === "*" ||
+			selectedOperators.value[index] === "/" ||
+			selectedOperators.value[index] === "="
+		) {
+			resolve([{
+				value: originalDb.value[currentOriginalDbIndex.value],
+				label: originalDb.value[currentOriginalDbIndex.value],
 				disabled: true,
-			});
+			}]);
+
+		} else {
+			for (let i = 0; i < originalDb.value.length; i++) {
+				originalDbList.push({
+					value: originalDb.value[i],
+					label: originalDb.value[i],
+					disabled: true,
+				});
+			}
+			resolve(originalDbList);
 		}
-		resolve(originalDbList);
 	} else {
 		try {
-			const res = await axios.get(
-				"http://" + state.center.ip + ":" + state.center.port + "/db/field",
+			const res = await center.get("/db/field",
 				{
 					params: {
-						session: localStorage.getItem("userSession"),
 						name_id: node.data.value,
 					},
 				}
@@ -237,13 +240,7 @@ const handleSubmit = async () => {
 		});
 	}
 	try {
-		const res = await axios.post(
-			"http://" +
-				state.center.ip +
-				":" +
-				state.center.port +
-				"/ruler/add?session=" +
-				localStorage.getItem("userSession"),
+		const res = await center.post("/ruler/add",
 			{
 				ruler_name: rulerName.value,
 				aligned_db: alignedDb.value,
@@ -267,25 +264,16 @@ const handleSubmit = async () => {
 };
 
 onMounted(async () => {
-	const res = await axios.get(
-		"http://" + state.center.ip + ":" + state.center.port + "/ruler/list",
-		{
-			params: {
-				session: localStorage.getItem("userSession"),
-			},
-		}
-	);
+	const res = await center.get("/ruler/list");
 
 	console.log(res);
 	rulerList.value = res.data.ruler_list;
 });
 const handelDetail = async (item: string, row: any) => {
 	try {
-		const res = await axios.get(
-			"http://" + state.center.ip + ":" + state.center.port + "/ruler/detail",
+		const res = await center.get("/ruler/detail",
 			{
 				params: {
-					session: localStorage.getItem("userSession"),
 					ruler_id: row.id,
 					original_node: item,
 				},
@@ -366,24 +354,12 @@ const alignedFieldArray = computed(() => {
 		<div class="scrollable-content">
 			<Background />
 			<el-table :data="rulerList">
-				<el-table-column
-					fixed
-					prop="ruler_name"
-					label="对齐规则名称"
-					align="center" />
-				<el-table-column
-					prop="aligned_db"
-					label="对齐数据库"
-					align="center"></el-table-column
-				>/>
-				<el-table-column
-					label="原始数据库"
-					header-align="center"
-					align="center">
+				<el-table-column fixed prop="ruler_name" label="对齐规则名称" align="center" />
+				<el-table-column prop="aligned_db" label="对齐数据库" align="center"></el-table-column>/>
+				<el-table-column label="原始数据库" header-align="center" align="center">
 					<template #default="{ row }">
 						{{ parseFields(row.original_db) }}
-					</template> </el-table-column
-				>/>
+					</template> </el-table-column>/>
 				<el-table-column label="字段" header-align="center" align="center">
 					<template #default="{ row }">
 						{{ parseFields(row.ruler_field) }}
@@ -392,13 +368,11 @@ const alignedFieldArray = computed(() => {
 				<el-table-column fixed="right" label="对齐规则" align="center">
 					<template #header>
 						对齐规则
-						<el-tooltip
-							class="item"
-							effect="light"
-							content="添加数据集"
-							placement="bottom">
+						<el-tooltip class="item" effect="light" content="添加数据集" placement="bottom">
 							<el-button link type="primary" size="small" @click="handleAdd">
-								<el-icon> <Plus /> </el-icon>
+								<el-icon>
+									<Plus />
+								</el-icon>
 							</el-button>
 						</el-tooltip>
 					</template>
@@ -429,12 +403,7 @@ const alignedFieldArray = computed(() => {
 				</div>
 				<div class="ruler-input">
 					<span>原始数据库：</span>
-					<el-tree-select
-						v-model="originalDb"
-						lazy
-						:props="props"
-						:load="loadNode"
-						multiple />
+					<el-tree-select v-model="originalDb" lazy :props="props" :load="loadNode" multiple />
 				</div>
 
 				<div class="button-container">
@@ -449,11 +418,8 @@ const alignedFieldArray = computed(() => {
 				}}</span>
 				<h3>当前选中的原始数据库: {{ originalDb[currentOriginalDbIndex] }}</h3>
 				<div class="ruler-input" v-for="(field, index) in alignedFieldArray">
-					<span>对齐字段({{ field }})：</span>
-					<el-select
-						v-model="selectedOperators[index]"
-						placeholder="选择符号"
-						style="width: 100px">
+					<span>对齐字段({{ field }}):</span>
+					<el-select v-model="selectedOperators[index]" placeholder="选择符号" style="width: 100px">
 						<el-option label="+" value="+" />
 						<el-option label="-" value="-" />
 						<el-option label="*" value="*" />
@@ -464,31 +430,17 @@ const alignedFieldArray = computed(() => {
 						<el-option label="min" value="min" />
 						<el-option label="sum" value="sum" />
 					</el-select>
-					<el-tree-select
-						lazy
-						:props="props"
-						:multiple="isMultiple(index)"
-						v-model="selectedData[index]"
+					<el-tree-select lazy :props="props" :multiple="isMultiple(index)" v-model="selectedData[index]"
 						:disabled="!selectedOperators[index]"
-						:load="handleLoad" />
+						:load="(node: Node, resolve: any) => handleLoad(node, resolve, index)"
+						:key="`tree-select-${index}-${selectedOperators[index]}`" />
 				</div>
 				<div class="button-container">
-					<el-button
-						@click="handlePreviousStep"
-						v-if="currentOriginalDbIndex >= 0"
-						>上一步</el-button
-					>
-					<el-button
-						type="primary"
-						@click="handleNextStep"
-						v-if="currentOriginalDbIndex < originalDb.length - 1"
-						>下一步</el-button
-					>
-					<el-button
-						@click="handleSubmit"
-						v-if="currentOriginalDbIndex === originalDb.length - 1"
-						>提交</el-button
-					>
+					<el-button @click="handlePreviousStep" v-if="currentOriginalDbIndex >= 0">上一步</el-button>
+					<el-button type="primary" @click="handleNextStep"
+						v-if="currentOriginalDbIndex < originalDb.length - 1">下一步</el-button>
+					<el-button @click="handleSubmit"
+						v-if="currentOriginalDbIndex === originalDb.length - 1">提交</el-button>
 					<el-button @click="resetData">关闭</el-button>
 				</div>
 			</div>
@@ -496,8 +448,7 @@ const alignedFieldArray = computed(() => {
 		<div v-if="playShow" class="overlay">
 			<div class="overlay-content">
 				<span class="ruler-title">{{ detailTitle }}</span>
-				<div
-					v-if="rulerDetail.ruler_detail && rulerDetail.ruler_detail.operator">
+				<div v-if="rulerDetail.ruler_detail && rulerDetail.ruler_detail.operator">
 					<div v-for="item in rulerDetail.ruler_detail.operator">
 						<div>{{ showDetail(item) }}</div>
 					</div>
@@ -521,16 +472,19 @@ const alignedFieldArray = computed(() => {
 	border-radius: 10px;
 	height: calc(100vh - 80px);
 }
+
 .scrollable-content {
 	height: 100%;
 	width: auto;
 }
+
 .el-table {
 	background-color: rgba(255, 255, 255, 0.4);
 	border-radius: 10px;
 	width: 100%;
 	height: 100%;
 }
+
 .overlay {
 	position: fixed;
 	top: 0;
@@ -544,6 +498,7 @@ const alignedFieldArray = computed(() => {
 	align-items: center;
 	z-index: 1000;
 }
+
 .overlay-content {
 	background: white;
 	padding: 20px;
@@ -553,19 +508,23 @@ const alignedFieldArray = computed(() => {
 	flex-direction: column;
 	align-items: center;
 }
+
 .button-container {
 	margin-top: 10px;
 }
+
 .ruler-title {
 	font-size: 30px;
 	font-weight: bold;
 	text-align: center;
 }
+
 .ruler-input {
 	margin-top: 10px;
 	margin-bottom: 5px;
 	display: flex;
 }
+
 .ruler-input span {
 	width: 300px;
 	text-align: right;

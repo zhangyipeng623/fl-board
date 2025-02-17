@@ -51,14 +51,8 @@ const goJob = () => {
 				<el-image :src="cuc2" class="cuc2" @click="goHome"></el-image>
 			</div>
 			<h2 class="mb-2">面向联邦学习的数据交换系统</h2>
-			<el-menu
-				border-right="0"
-				background-color="#a7535a"
-				active-text-color="#51c4d3"
-				class="el-menu-vertical-demo"
-				:default-active="1"
-				text-color="#fff"
-				@open="handleOpen"
+			<el-menu border-right="0" background-color="#a7535a" active-text-color="#51c4d3"
+				class="el-menu-vertical-demo" :default-active="1" text-color="#fff" @open="handleOpen"
 				@close="handleClose">
 				<el-menu-item index="1" @click="goNodeInfo">
 					<el-icon><icon-menu /></el-icon>
@@ -66,23 +60,25 @@ const goJob = () => {
 				</el-menu-item>
 				<el-sub-menu index="2">
 					<template #title>
-						<el-icon><Coin /></el-icon>
+						<el-icon>
+							<Coin />
+						</el-icon>
 						<span>数据集管理</span>
 					</template>
-					<el-menu-item index="2-1" @click="goOriginal"
-						>原始数据集</el-menu-item
-					>
+					<el-menu-item index="2-1" @click="goOriginal">原始数据集</el-menu-item>
 					<el-menu-item index="2-2" @click="goRuler">对齐规则</el-menu-item>
-					<el-menu-item index="2-3" @click="goAlignData"
-						>对齐数据集</el-menu-item
-					>
+					<el-menu-item index="2-3" @click="goAlignData">对齐数据集</el-menu-item>
 				</el-sub-menu>
 				<el-menu-item index="3" @click="goNetInfo">
-					<el-icon><document /></el-icon>
+					<el-icon>
+						<document />
+					</el-icon>
 					<span>网络模型管理</span>
 				</el-menu-item>
 				<el-menu-item index="4" @click="goJob">
-					<el-icon><Odometer /></el-icon>
+					<el-icon>
+						<Odometer />
+					</el-icon>
 					<span>任务</span>
 				</el-menu-item>
 			</el-menu>
@@ -103,6 +99,7 @@ const goJob = () => {
 	background-color: #f6eded;
 	z-index: -2;
 }
+
 .tac {
 	/* 左边导航栏 */
 	margin-right: 10px;
@@ -113,6 +110,7 @@ const goJob = () => {
 	margin: auto;
 	width: 90%;
 }
+
 .el-menu {
 	border-right: 0;
 }

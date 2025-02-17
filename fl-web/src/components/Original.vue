@@ -10,16 +10,19 @@ const tableData = ref([]);
 const showOverlay = ref(false);
 const hasHeader = ref(true);
 const tableName = ref("");
+
+// 定义上传请求头
+const uploadHeaders = {
+	session: localStorage.getItem("userSession"),
+};
+
 const uploadUrl = computed(() => {
 	return (
 		"http://" +
 		state.user.ip +
 		":" +
 		state.user.port +
-		"/db/upload?session=" +
-		localStorage.getItem("localSession") +
-		"&userSession=" +
-		localStorage.getItem("userSession")
+		"/db/upload"
 	);
 });
 const handleClick = () => {
@@ -55,14 +58,7 @@ const handleUploadSuccess = (res: any) => {
 	console.log("上传成功:", res);
 	showOverlay.value = false;
 	center
-		.get(
-			"/db/original",
-			{
-				params: {
-					session: localStorage.getItem("userSession"),
-				},
-			}
-		)
+		.get("/db/original",)
 		.then((res) => {
 			console.log(res);
 			tableData.value = res.data.db_list;
@@ -74,27 +70,12 @@ const handleUploadSuccess = (res: any) => {
 
 onMounted(async () => {
 	const res = await center.get(
-		"http://" + state.center.ip + ":" + state.center.port + "/db/original",
-		{
-			params: {
-				session: localStorage.getItem("userSession"),
-			},
-		}
-	);
+		"http://" + state.center.ip + ":" + state.center.port + "/db/original");
 
 	console.log(res);
 	tableData.value = res.data.db_list;
 });
 
-// 解析字段字符串为数组并格式化为字符串
-const parseFields = (fieldString: string) => {
-	if (fieldString.includes(",")) {
-		const fieldsArray = fieldString.split(","); // 解析字符串为数组
-		return fieldsArray.join("; "); // 将数组转换为以分号分隔的字符串
-	} else {
-		return [fieldString];
-	}
-};
 </script>
 
 <template>
@@ -102,42 +83,19 @@ const parseFields = (fieldString: string) => {
 		<div class="scrollable-content">
 			<Background />
 			<el-table :data="tableData">
-				<el-table-column
-					fixed
-					prop="db_name"
-					label="数据库名称"
-					align="center" />
+				<el-table-column fixed prop="db_name" label="数据库名称" align="center" />
 				<el-table-column prop="username" label="节点名称" align="center" />
 				<el-table-column prop="data_number" label="数据量" align="center" />
-				<el-table-column label="字段" header-align="center" align="center">
-					<template #default="{ row }">
-						{{ parseFields(row.field) }}
-					</template>
+				<el-table-column prop="field" label="字段" header-align="center" align="center">
 				</el-table-column>
-				<el-table-column
-					prop="created_at"
-					sortable
-					label="创建时间"
-					align="center" />
-				<el-table-column
-					prop="updated_at"
-					sortable
-					label="更新时间"
-					align="center" />
-				<el-table-column
-					fixed="right"
-					label="操作"
-					min-width="120"
-					align="center">
+				<el-table-column fixed="right" label="操作" min-width="120" align="center">
 					<template #header>
 						操作
-						<el-tooltip
-							class="item"
-							effect="light"
-							content="添加数据集"
-							placement="bottom">
+						<el-tooltip class="item" effect="light" content="添加数据集" placement="bottom">
 							<el-button link type="primary" size="small" @click="handleAdd">
-								<el-icon> <Plus /> </el-icon>
+								<el-icon>
+									<Plus />
+								</el-icon>
 							</el-button>
 						</el-tooltip>
 					</template>
@@ -152,20 +110,13 @@ const parseFields = (fieldString: string) => {
 		<div v-if="showOverlay" class="overlay">
 			<div class="overlay-content">
 				<span class="node-title">上传数据集</span>
-				<el-upload
-					ref="uploadRef"
-					class="upload-demo"
-					:action="uploadUrl"
-					:auto-upload="false"
-					:before-upload="beforeUpload"
-					:on-success="handleUploadSuccess"
-					:on-error="handleUploadError"
-					:data="{
+				<el-upload ref="uploadRef" class="upload-demo" :action="uploadUrl" :headers="uploadHeaders"
+					:auto-upload="false" :before-upload="beforeUpload" :on-success="handleUploadSuccess"
+					:on-error="handleUploadError" :data="{
 						hasHeader: hasHeader,
 						table_name: tableName,
 						user_id: state.user.id,
-					}"
-					accept=".csv">
+					}" accept=".csv">
 					<el-button size="small" type="primary">点击上传 CSV 文件</el-button>
 				</el-upload>
 				<el-checkbox v-model="hasHeader">是否有表头</el-checkbox>
@@ -189,16 +140,19 @@ const parseFields = (fieldString: string) => {
 	border-radius: 10px;
 	height: calc(100vh - 80px);
 }
+
 .scrollable-content {
 	height: 100%;
 	width: auto;
 }
+
 .el-table {
 	background-color: rgba(255, 255, 255, 0.4);
 	border-radius: 10px;
 	width: 100%;
 	height: 100%;
 }
+
 .overlay {
 	position: fixed;
 	top: 0;
@@ -211,6 +165,7 @@ const parseFields = (fieldString: string) => {
 	align-items: center;
 	z-index: 1000;
 }
+
 .overlay-content {
 	background: white;
 	padding: 20px;
@@ -219,14 +174,17 @@ const parseFields = (fieldString: string) => {
 	flex-direction: column;
 	align-items: center;
 }
+
 .button-container {
 	margin-top: 20px;
 }
+
 .node-title {
 	font-size: 30px;
 	font-weight: bold;
 	text-align: center;
 }
+
 .uploaded-file-name {
 	margin-top: 10px;
 	color: #333;

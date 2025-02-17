@@ -7,6 +7,7 @@ const title = ref("节点信息");
 
 <template>
 	<main>
+
 		<Head :title="title"></Head>
 		<NodeInfo />
 	</main>

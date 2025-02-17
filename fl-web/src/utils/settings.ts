@@ -1,6 +1,7 @@
 import { reactive, ref } from "vue";
 
 export interface DbNode {
+    id: number;
     name: string;
     ip: string;
     port: string;
@@ -15,8 +16,9 @@ export const state = reactive({
         ip: "127.0.0.1",
         port: "8100",
         is_connect: false,
-    },
+    } as DbNode,
     center:{
+        id:0,
         name:"中心节点",
         ip:"127.0.0.1",
         port:"8000",

@@ -7,6 +7,7 @@ const title = ref("原始数据集");
 
 <template>
 	<main>
+
 		<Head :title="title"></Head>
 		<Original />
 	</main>

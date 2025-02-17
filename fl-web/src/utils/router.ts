@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory,type RouteLocationNormalized, type NavigationGuardNext  } from 'vue-router'
-import axios from 'axios';
+import { center ,user} from '@/utils/utils';
 import { state } from '@/utils/settings';
 
 
@@ -11,25 +11,11 @@ const beforeEnter = async (to: RouteLocationNormalized, from: RouteLocationNorma
     next({ name: 'login' }); // 如果未登录，重定向到登录页面
   } else {
     try {
-			const res = await axios.get(
-				"http://" + state.center.ip + ":" + state.center.port + "/check_session",
-				{
-					params: {
-						session: localStorage.getItem("userSession"),
-					},
-				}
-			); // 检查session是否有效
+			const res = await center.get("/check_session"); // 检查session是否有效
       if (res.status === 200) {
           state.updateCenterInfo(true);
           state.updateUserInfo(res.data.id,res.data.username,res.data.ip,res.data.port,true);
-          const res_local = await axios.get(
-            "http://" + state.user.ip + ":" + state.user.port + "/check_session",
-            {
-              params: {
-                session: localStorage.getItem("localSession"),
-              },
-            }
-          );
+          const res_local = await user.get("/check_session");
           if (res_local.status === 200) {
             next(); // 如果localSession有效，正常进入
           } else {
