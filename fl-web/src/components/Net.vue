@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Background from "./Background.vue";
 import { onMounted, ref, computed } from "vue";
-import axios from "axios";
+import { center } from "@/utils/utils";
 import { Plus, QuestionFilled } from "@element-plus/icons-vue";
 import { state } from "@/utils/settings";
 import type { UploadInstance } from "element-plus";
@@ -33,9 +33,9 @@ const uploadUrl = computed(() => {
 });
 const netDetail = (net_id: number) => {
 	showNetDetail.value = true;
-	const res = axios
+	center
 		.get(
-			"http://" + state.center.ip + ":" + state.center.port + "/net/detail",
+			"/net/detail",
 			{
 				params: {
 					session: localStorage.getItem("userSession"),
@@ -85,8 +85,8 @@ const handleUploadError = (err: any, file: any) => {
 const handleUploadSuccess = (res: any) => {
 	console.log("上传成功:", res);
 	showOverlay.value = false;
-	axios
-		.get("http://" + state.center.ip + ":" + state.center.port + "/net/list", {
+	center
+		.get("/net/list", {
 			params: {
 				session: localStorage.getItem("userSession"),
 			},
@@ -101,8 +101,8 @@ const handleUploadSuccess = (res: any) => {
 };
 
 onMounted(async () => {
-	const res = await axios.get(
-		"http://" + state.center.ip + ":" + state.center.port + "/net/list",
+	const res = await center.get(
+		"/net/list",
 		{
 			params: {
 				session: localStorage.getItem("userSession"),

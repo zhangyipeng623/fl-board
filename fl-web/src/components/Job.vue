@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import Background from "./Background.vue";
-import { onMounted, ref, computed } from "vue";
-import axios from "axios";
-import { Plus, QuestionFilled } from "@element-plus/icons-vue";
-import { state } from "@/utils/settings";
-import type { UploadInstance } from "element-plus";
+import { onMounted, ref, watch} from "vue";
+import { center } from "@/utils/utils";
+import { Plus } from "@element-plus/icons-vue";
 import Prism from "prismjs";
 import "prismjs/components/prism-python.min.js";
 import "prismjs/themes/prism.css";
@@ -17,33 +15,29 @@ const isLoad = ref(false);
 interface DB {
 	id: number;
 	aligned_db: string;
-	field: string[];
+	ruler_field: string;
+}
+interface Net {
+	id: number;
+	net_name: string;
+	detail: string;
 }
 const db_list = ref<DB[]>([]);
+const Field = ref<string[]>([]);
+const netList = ref<Net[]>([])
 
-const netName = ref("");
 const inputField = ref([]);
 const outputField = ref([]);
-const detail = ref("");
-const db = ref("");
+const db = ref<number>();
+const net = ref()
+
 
 const code = ref("");
-
-const uploadUrl = computed(() => {
-	return (
-		"http://" +
-		state.center.ip +
-		":" +
-		state.center.port +
-		"/net/upload?session=" +
-		localStorage.getItem("userSession")
-	);
-});
 const netDetail = (net_id: number) => {
 	showNetDetail.value = true;
-	axios
+	center
 		.get(
-			"http://" + state.center.ip + ":" + state.center.port + "/net/detail",
+			"/net/detail",
 			{
 				params: {
 					session: localStorage.getItem("userSession"),
@@ -67,8 +61,8 @@ const netDetail = (net_id: number) => {
 };
 
 const handleAdd = () => {
-	const res = axios
-		.get("http://" + state.center.ip + ":" + state.center.port + "/db/list", {
+	center
+		.get("/ruler/list", {
 			params: {
 				session: localStorage.getItem("userSession"),
 			},
@@ -76,7 +70,7 @@ const handleAdd = () => {
 		.then((res) => {
 			console.log(res);
 			if (res.status == 200) {
-				db_list.value = res.data.db_list;
+				db_list.value = res.data.ruler_list;
 			} else {
 				alert("数据库列表获取失败");
 			}
@@ -84,59 +78,96 @@ const handleAdd = () => {
 		.catch((error) => {
 			console.error("请求数据失败:", error);
 		});
-	showOverlay.value = true;
-};
-
-const beforeUpload = (file: File): boolean => {
-	const isPY = file.name.endsWith(".py");
-	if (!isPY) {
-		alert("上传文件只能是 py 格式!");
-		return false;
-	}
-	return true;
-};
-
-const uploadRef = ref<UploadInstance>();
-
-const handleUpload = () => {
-	uploadRef.value!.submit();
-};
-
-const handleUploadError = (err: any, file: any) => {
-	console.error("上传失败:", err); // 打印错误信息
-	alert(`上传失败: ${file.name} - ${err.message || "未知错误"}`); // 显示错误提示
-};
-
-const handleUploadSuccess = (res: any) => {
-	console.log("上传成功:", res);
-	showOverlay.value = false;
-	axios
-		.get("http://" + state.center.ip + ":" + state.center.port + "/net/list", {
-			params: {
-				session: localStorage.getItem("userSession"),
-			},
-		})
+	center
+		.get(
+			"/net/list",
+			{
+				params: {
+					session: localStorage.getItem("userSession"),
+				},
+			}
+		)
 		.then((res) => {
 			console.log(res);
-			tableData.value = res.data.net_list;
+			netList.value = res.data.net_list;
 		})
 		.catch((error) => {
 			console.error("请求数据失败:", error);
 		});
+	showOverlay.value = true;
+};
+
+
+watch(db, (newDb) => {
+	if (newDb) {
+		inputField.value = [];
+		outputField.value = [];
+		Field.value = get_db_field(newDb); // 在选择数据库后更新输入字段
+	}
+});
+
+const get_db_field = (db: number) => {
+	const db_field = db_list.value.filter((item) => {
+		return item.id == db;
+	});
+	// 按照逗号分割
+	return db_field[0].ruler_field.split(",");
+};
+
+const handleUpload = async () => {
+	await center
+	.post(
+		"/job/add",{
+			db: db.value,
+			input_field: inputField.value,
+			output_field: outputField.value,
+			net: net.value,
+		},
+		{
+			headers: {
+				'Content-Type': 'application/json' // 你可以根据需要添加其他请求头
+			},
+			params: {
+				'session': localStorage.getItem("userSession"), // 添加请求头参数
+			}
+		}
+		
+	)
+	.then((res) => {
+		if (res.status == 200) {
+			inputField.value = [];
+			outputField.value = [];
+			db.value = undefined;
+			alert("任务上传成功")
+			showOverlay.value = false;
+		}
+	})
+	.catch((error) => {
+		alert("任务上传失败"+ error)
+	});
 };
 
 onMounted(async () => {
-	const res = await axios.get(
-		"http://" + state.center.ip + ":" + state.center.port + "/job/list",
+	await center
+	.get(
+		"/job/list",
 		{
 			params: {
 				session: localStorage.getItem("userSession"),
 			},
 		}
-	);
-
-	console.log(res);
-	tableData.value = res.data.job_list;
+	)
+	.then((res) => {
+		if(res.status == 200){
+			tableData.value = res.data.job_list;
+		}
+		else{
+			alert("任务列表获取失败");
+		}
+	})
+	.catch((error) => {
+		console.error("请求数据失败:", error);
+	});
 });
 </script>
 
@@ -151,7 +182,7 @@ onMounted(async () => {
 					label="上传节点"
 					width="200"
 					align="center" />
-				<el-table-column prop="db" label="关联数据库" align="center" />
+				<el-table-column prop="db_name" label="关联数据库" align="center" />
 				<el-table-column
 					prop="input_field"
 					label="输入字段"
@@ -196,67 +227,44 @@ onMounted(async () => {
 			<div class="overlay-content">
 				<span class="node-title">新建任务</span>
 				<div class="net-input">
+					<span>使用网络模型名称：</span>
+					<el-select v-model="net" placeholder="请选择数据库名称">
+						<el-option
+							v-for="item in netList"
+							:key="item.id"
+							:label="item.net_name"
+							:value="item.id" />
+					</el-select>
+				</div>
+				<div class="net-input">
 					<span>使用数据库名称：</span>
 					<el-select v-model="db" placeholder="请选择数据库名称">
 						<el-option
 							v-for="item in db_list"
 							:key="item.id"
 							:label="item.aligned_db"
-							:value="item.aligned_db" />
+							:value="item.id" />
 					</el-select>
 				</div>
 				<div class="net-input">
 					<span>模型输入字段：</span>
 					<el-select v-model="inputField" placeholder="模型输入字段" multiple>
 						<el-option
-							v-for="item in db_list"
-							:key="item.id"
-							:label="item.field"
-							:value="item.field" />
+							v-for="item in Field"
+							:key="item"
+							:label="item"
+							:value="item" />
 					</el-select>
 				</div>
 				<div class="net-input">
 					<span>模型输出字段：</span>
-					<el-select v-model="inputField" placeholder="模型输入字段" multiple>
+					<el-select v-model="outputField" placeholder="模型输入字段" multiple>
 						<el-option
-							v-for="item in db_list"
-							:key="item.id"
-							:label="item.field"
-							:value="item.field" />
+							v-for="item in Field"
+							:key="item"
+							:label="item"
+							:value="item" />
 					</el-select>
-				</div>
-				<div class="net-input">
-					<span>任务描述：</span>
-					<el-input v-model="detail" placeholder="任务描述" />
-				</div>
-				<div class="net-input">
-					<span>模型文件：</span>
-					<el-upload
-						ref="uploadRef"
-						class="upload-demo"
-						:action="uploadUrl"
-						:auto-upload="false"
-						:before-upload="beforeUpload"
-						:on-success="handleUploadSuccess"
-						:on-error="handleUploadError"
-						:data="{
-							netName: netName,
-							inputField: inputField,
-							outputField: outputField,
-							detail: detail,
-							user_id: state.user.id,
-						}"
-						accept=".py">
-						<el-button size="small" type="primary">点击上传 py 文件</el-button>
-						<el-tooltip
-							class="item"
-							content="python文件中需要包含Net类和DataSet类"
-							placement="right">
-							<el-icon style="margin-left: 10px">
-								<QuestionFilled />
-							</el-icon>
-						</el-tooltip>
-					</el-upload>
 				</div>
 				<div>
 					<el-button type="primary" @click="handleUpload">上传</el-button>

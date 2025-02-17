@@ -1,3 +1,16 @@
+import threading
+from functools import wraps
+
+# 多线程修饰器
+def run_in_thread(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+        thread.daemon = False
+        thread.start()
+        return thread
+    return wrapper
+
 def add(*args):
     return round(sum(args),2)
 

@@ -88,6 +88,8 @@ class Job(BaseModel):
     id=AutoField()
     job_id = CharField(null=False)
     node_name = CharField(null=False)
+    db_id = IntegerField(null=False)
+    db_name = CharField(null=False)
     net_name = CharField(null=False)
     net_id = IntegerField(null=False)
     input_field = CharField(null=False)

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { RouterView, useRouter } from "vue-router";
 import { defineProps } from "vue";
-import { state } from "@/utils/settings";
-import axios from "axios";
+import { center ,user} from "@/utils/utils";
+import { state } from "@/utils/settings"
+import head from "@/assets/images/head.png";
 const router = useRouter();
 
 const user_click = () => {
@@ -15,14 +16,14 @@ const user_click = () => {
 };
 const logout = () => {
 	console.log("logout");
-	axios
-		.get("http://" + state.center.ip + ":" + state.center.port + "/logout", {
+	center
+		.get("/logout", {
 			params: {
 				session: localStorage.getItem("userSession"),
 			},
 		})
 		.then(() => {
-			axios.get("http://" + state.user.ip + ":" + state.user.port + "/logout", {
+			user.get( "/logout", {
 				params: {
 					session: localStorage.getItem("localSession"),
 				},
@@ -49,7 +50,7 @@ const { title } = defineProps(["title"]);
 			<el-avatar
 				class="user-avatar"
 				@click="user_click"
-				src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+				:src = head />
 			<template #dropdown>
 				<el-dropdown-menu v-if="state.user.is_connect">
 					<el-dropdown-item>{{ state.user.name }}</el-dropdown-item>

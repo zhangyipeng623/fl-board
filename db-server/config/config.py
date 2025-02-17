@@ -5,6 +5,7 @@ class Config(object):
     App = "main:app"
     Host = "localhost"
     Port = 8000
+
     Reload = True
     DEBUG = True
     

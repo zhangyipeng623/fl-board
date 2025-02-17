@@ -1,4 +1,5 @@
 from fastapi import APIRouter,HTTPException
+from fastapi.responses import FileResponse
 from model import Net,redis
 from fastapi import UploadFile, File, Form,Request
 import ast,uuid, json
@@ -77,7 +78,6 @@ async def net_upload(
         raise HTTPException(400, f"上传失败，res:{e}")
     return {"status": "success"}
 
-
 @net.get("/detail")
 async def get_net_detail(request: Request):
     net_id = request.query_params.get("net_id")
@@ -86,3 +86,18 @@ async def get_net_detail(request: Request):
     with open(f"./data/net/{file_name}.py", "r") as f:
         code = f.read()
     return {"code": code}
+
+@net.get("/get_net_file")
+def get_net_file(request: Request):
+    file_name = request.query_params.get("net_id")
+
+    # 文件完整路径
+    file_path = f"./data/net/{file_name}.py"
+    try:
+        return FileResponse(
+            path=file_path,  # 文件路径
+            media_type="application/octet-stream",  # 文件的内容类型，可随需求调整
+            filename=f"{file_name}.py",  # 下载的文件名，例如：net_id.py
+        )
+    except FileNotFoundError:
+        raise HTTPException(404, detail="文件未找到")

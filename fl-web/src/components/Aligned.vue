@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import Background from "./Background.vue";
-import { onMounted, ref, computed } from "vue";
-import axios from "axios";
-import { Plus } from "@element-plus/icons-vue";
-import { state } from "@/utils/settings";
+import { onMounted, ref } from "vue";
+import { center } from "@/utils/utils";
 import type { UploadInstance } from "element-plus";
 
 const alignedList = ref([]);
 const showOverlay = ref(false);
 
-const handleClick = () => {
-	console.log("click");
-};
 
 const handleAdd = () => {
 	showOverlay.value = true;
@@ -29,8 +24,8 @@ const beforeUpload = (file: File): boolean => {
 const uploadRef = ref<UploadInstance>();
 
 onMounted(async () => {
-	const res = await axios.get(
-		"http://" + state.center.ip + ":" + state.center.port + "/ruler/aligned",
+	const res = await center.get(
+		"/ruler/aligned",
 		{
 			params: {
 				session: localStorage.getItem("userSession"),

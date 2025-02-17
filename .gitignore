@@ -8,3 +8,4 @@ FATE*/
 .DS_Store/
 .cursor
 .vscode
+__init__.py

@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from config import config 
 from model import redis
+import multiprocessing,time,threading
+from job.job import start_job
 
 app = FastAPI() # 创建 api 对象
 
@@ -15,7 +17,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.middleware("http")
 async def check_session(request: Request, call_next):
-    if request.url.path == "/login" or request.url.path == "/check_session" or request.url.path == "/status" or request.url.path == "/aligned/get_data" or request.url.path == "/aligned/add":
+    if request.url.path == "/login" or request.url.path == "/check_session" or request.url.path == "/status" or request.url.path == "/aligned/get_data" or request.url.path == "/aligned/add" or request.url.path == "/job/start":
         return await call_next(request)
     session = request.query_params.get("session")
     user_id = redis.get(session)
@@ -32,15 +34,61 @@ app.add_middleware(
     allow_headers=config.Allow_headers,   # 允许所有请求头
 )
 
-
-
-
-if __name__ == '__main__':
+def start_app():
+    import logging
     import uvicorn
-    # 运行fastapi程序
+
+    # 配置日志 
+    logging.basicConfig(
+            filename=f'./log/app.log',
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+        )
+
     uvicorn.run(
         app=config.App,
         host=config.Host, 
         port=config.Port, 
-        reload=config.Reload
+        reload=config.Reload,
+        log_config="./config/uvicorn_config.json",
+        reload_excludes=["data/*","log/*"]
         )
+
+# 监控并重启进程的函数
+def monitor_and_restart_processes(processes):
+    while True:
+        for i, process in enumerate(processes):
+            # 判断进程是否已终止
+            if not process.is_alive():
+                print(f"[监控] 进程 {process.name} 已退出，正在重启...")
+                # 重新创建进程
+                if process.name == "start_job":
+                    new_process = multiprocessing.Process(target=start_job, name="start_job")
+                # 确保新进程启动
+                new_process.start()
+                print(f"[监控] 进程 {process.name} 重启成功,pid: {new_process.pid}")
+                # 更新到进程列表
+                processes[i] = new_process
+        # 稍作等待，避免高频监控浪费资源
+        time.sleep(1)
+
+
+if __name__ == '__main__':
+    # 初始化子进程列表
+    processes = []
+
+    # 创建子进程
+    p_job = multiprocessing.Process(target=start_job, name="start_job")
+    processes.append(p_job)
+
+    # 启动子进程
+    for process in processes:
+        process.start()
+        print(f"[主线程] 子进程 {process.name} 启动成功, pid: {process.pid}")
+
+    # 将监控逻辑放入子线程运行
+    monitor_thread = threading.Thread(target=monitor_and_restart_processes, args=(processes,), daemon=True)
+    monitor_thread.start()
+
+    # 在主线程中运行 FastAPI 应用
+    start_app()

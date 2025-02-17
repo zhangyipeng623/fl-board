@@ -1,8 +1,32 @@
 import { state } from "@/utils/settings";
 import axios from "axios";
+
+const center = axios.create({
+    baseURL: "http://" + state.center.ip + ":" + state.center.port,
+});
+center.interceptors.request.use((config) => {
+    config.headers['session'] = localStorage.getItem("userSession");
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
+const user = axios.create({
+    baseURL: "http://" + state.user.ip + ":" + state.user.port,
+});
+
+user.interceptors.request.use((config) => {
+    config.headers['session'] = localStorage.getItem("localSession");
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
+export {center,user};
+
 export const getNodeStatus = async () => {
     try{
-        const res = await axios.get("http://" + state.center.ip + ":" + state.center.port + "/node/status",{
+        const res = await center.get("/node/status",{
             params:{
                 session: localStorage.getItem("userSession"),
                 username: state.user.name,
