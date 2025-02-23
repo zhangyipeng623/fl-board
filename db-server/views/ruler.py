@@ -60,7 +60,7 @@ def add(ruler_info: RulerInfo):
             .get()
         )
         res = requests.post(
-            f"http://{user.ip}:{user.port}/aligned/add?file_name={file_name}&original_file={node.file_name}",
+            f"http://{user.node.ip}:{user.node.port}/aligned/add?file_name={file_name}&original_file={node.file_name}",
             json=ruler.model_dump(),
         )
         if res.status_code != 200:

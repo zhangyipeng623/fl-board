@@ -17,12 +17,28 @@ class BaseModel(Model):
         database = db
 
 
+class Node(BaseModel):
+    id = AutoField()
+    node_name = CharField(null=False)
+    ip = CharField(null=False)
+    port = IntegerField(null=False)
+    system = CharField(null=False)
+    cpu = CharField(null=False)
+    gpu = CharField(null=False)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+
+    class Meta:
+        table_name = "node"
+
+
 class User(BaseModel):
     id = AutoField()
     username = CharField(unique=True)
     password = CharField(null=False)
-    ip = CharField(null=False)
-    port = IntegerField(null=False)
+    node = ForeignKeyField(
+        Node, field=Node.id, backref="users", null=False
+    )  # 修改字段名和参数
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 

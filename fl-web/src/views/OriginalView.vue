@@ -14,8 +14,8 @@ const title = ref("原始数据集");
 </template>
 <style scoped>
 main {
-	position: relative;
-	overflow-y: auto;
+	width: 100%;
+	position: sticky;
 	min-height: 100vh;
 }
 </style>

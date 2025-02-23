@@ -50,8 +50,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/HomeView.vue'),
-      beforeEnter: beforeEnter,
+      redirect: '/node_info', // 自动重定向到 /node_info
     },
     
     {

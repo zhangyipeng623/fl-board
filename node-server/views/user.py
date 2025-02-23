@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from model import redis
 from config import config
-import json, logging
+import json
 
 router = APIRouter()
 

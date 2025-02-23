@@ -14,6 +14,7 @@ const title = ref("网络模型管理");
 </template>
 <style scoped>
 main {
+	width: 100%;
 	position: relative;
 	overflow-y: auto;
 	min-height: 100vh;

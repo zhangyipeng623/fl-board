@@ -23,14 +23,3 @@ user.interceptors.request.use((config) => {
 });
 
 export {center,user};
-
-export const getNodeStatus = async () => {
-    try{
-        const res = await center.get("/node/status");
-        state.updateDbNode(res.data.user_list);
-        state.updateCenterInfo(true);
-        console.log(res.data);
-    }catch(e){
-        console.log(e);
-    }
-};

@@ -50,7 +50,7 @@ def job_add(job_info: Item, request: Request):
     for db_node in original_db:
         _, node = db_node.split("-")
         user = User.select().where(User.username == node).first()
-        node_list.append({"ip": user.ip, "port": user.port})
+        node_list.append({"ip": user.node.ip, "port": user.node.port})
 
     job = {
         "job_id": str(job_id),

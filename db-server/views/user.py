@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from peewee import OperationalError
-from model import User, redis, db
+from model import User, redis, db, Node
 from config import config
 import json, psutil, uuid, bcrypt, requests
 
@@ -19,6 +19,9 @@ class RegisterForm(BaseModel):
     password: str
     ip: str
     port: int
+    system: str
+    cpu: str
+    gpu: str
 
 
 @user.post("/register")
@@ -26,6 +29,15 @@ def register_user(form: RegisterForm):
     """
     新增用户注册接口，演示如何加密保存密码
     """
+    node = Node.get_or_none(Node.ip == form.ip, Node.port == form.port)
+    if node is None:
+        node = Node.create(
+            ip=form.ip,
+            port=form.port,
+            system=form.system,
+            cpu=form.cpu,
+            gpu=form.gpu,
+        )
     user = User.get_or_none(User.username == form.username)
     if user is not None:
         raise HTTPException(status_code=400, detail="用户名已存在")
@@ -35,8 +47,7 @@ def register_user(form: RegisterForm):
     new_user = User.create(
         username=form.username,
         password=hashed_password.decode("utf-8"),  # 存储解码后的加密哈希
-        ip=form.ip,
-        port=form.port,
+        node=node.id,
     )
     return {"message": "用户注册成功", "username": new_user.username}
 
@@ -56,24 +67,29 @@ def login(form: LoginForm):
         raise HTTPException(401, detail="用户名或密码错误")
     session = str(uuid.uuid4())
     user_info = json.dumps(
-        {"ip": user.ip, "port": user.port, "username": user.username, "id": user.id}
+        {
+            "ip": user.node.ip,
+            "port": user.node.port,
+            "username": user.username,
+            "id": user.id,
+        }
     )
     redis.set(session, user_info, ex=60 * 60 * 24 * 2)
     login_info = {
-        "ip": user.ip,
-        "port": user.port,
+        "ip": user.node.ip,
+        "port": user.node.port,
         "username": user.username,
         "id": user.id,
         "session": session,
     }
     res = requests.post(
-        f"http://{user.ip}:{user.port}/login",
+        f"http://{user.node.ip}:{user.node.port}/login",
         json=login_info,
         headers={"x-forwarded-for": config.Host},
     )
     if res.status_code != 200:
         raise HTTPException(401, detail=f"登陆出错{res.text}")
-    return {"ip": user.ip, "port": user.port, "session": session, "id": user.id}
+    return login_info
 
 
 @user.get("/status")

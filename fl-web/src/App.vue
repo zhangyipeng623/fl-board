@@ -1,94 +1,112 @@
 <script setup lang="ts">
-import { RouterView, useRouter } from "vue-router";
+import { RouterView, useRoute, useRouter } from "vue-router";
 import {
 	Document,
 	Menu as IconMenu,
 	Coin,
 	Odometer,
+	Fold,
+	Expand
 } from "@element-plus/icons-vue";
-
 import cuc2 from "@/assets/images/cuc_2.png"; /* 大图标 */
+import cuc1 from "@/assets/images/cuc_1.png";
+import { onMounted, ref } from "vue";
 const router = useRouter();
-const handleOpen = (key: string, keyPath: string[]) => {
-	console.log(key, keyPath);
-};
-const handleClose = (key: string, keyPath: string[]) => {
-	console.log(key, keyPath);
-};
-
-const goOriginal = () => {
-	router.push({ path: "/original" });
-};
-const goRuler = () => {
-	router.push({ path: "/ruler" });
-};
-const goAlignData = () => {
-	router.push({ path: "/aligned" });
-};
-const goNodeInfo = () => {
-	console.log("goNodeInfo");
-	router.push({ path: "/node_info" });
-};
+const route = useRoute();
+const isRouter = ref(true);
 const goHome = () => {
 	console.log("goHome");
-	router.push({ path: "/home" });
+	router.push({ path: "/" });
 };
-const goNetInfo = () => {
-	console.log("goNetInfo");
-	router.push({ path: "/net" });
-};
-const goJob = () => {
-	console.log("goJob");
-	router.push({ path: "/job" });
-};
+const handleOpen = (key: string, keyPath: string[]) => {
+	console.log(key, keyPath)
+}
+const handleClose = (key: string, keyPath: string[]) => {
+	console.log(key, keyPath)
+}
+
+onMounted(() => {
+	console.log("App mounted");
+});
+const isCollapse = ref(false);
 </script>
 
 <template>
 	<div class="background"></div>
-	<el-row class="tac">
-		<el-col :span="24">
-			<div style="text-align: center; padding-top: 10px">
-				<el-image :src="cuc2" class="cuc2" @click="goHome"></el-image>
-			</div>
-			<h2 class="mb-2">面向联邦学习的数据交换系统</h2>
-			<el-menu border-right="0" background-color="#a7535a" active-text-color="#51c4d3"
-				class="el-menu-vertical-demo" :default-active="1" text-color="#fff" @open="handleOpen"
-				@close="handleClose">
-				<el-menu-item index="1" @click="goNodeInfo">
-					<el-icon><icon-menu /></el-icon>
-					<span>节点信息</span>
-				</el-menu-item>
-				<el-sub-menu index="2">
-					<template #title>
-						<el-icon>
-							<Coin />
-						</el-icon>
-						<span>数据集管理</span>
-					</template>
-					<el-menu-item index="2-1" @click="goOriginal">原始数据集</el-menu-item>
-					<el-menu-item index="2-2" @click="goRuler">对齐规则</el-menu-item>
-					<el-menu-item index="2-3" @click="goAlignData">对齐数据集</el-menu-item>
-				</el-sub-menu>
-				<el-menu-item index="3" @click="goNetInfo">
-					<el-icon>
-						<document />
-					</el-icon>
-					<span>网络模型管理</span>
-				</el-menu-item>
-				<el-menu-item index="4" @click="goJob">
-					<el-icon>
-						<Odometer />
-					</el-icon>
-					<span>任务</span>
-				</el-menu-item>
-			</el-menu>
-		</el-col>
-	</el-row>
+	<el-menu :collapse="isCollapse" active-text-color="#51c4d3" class="el-menu-vertical" :default-active="route.path"
+		text-color="black" :router="isRouter" @open="handleOpen" @close="handleClose">
 
+		<div style="text-align: center; padding-top: 15px">
+			<el-image :src="cuc2" class="cuc2" @click="goHome" v-if="!isCollapse"></el-image>
+			<el-image :src="cuc1" class="cuc1" @click="goHome" v-if="isCollapse"></el-image>
+		</div>
+		<el-menu-item index="/node_info">
+			<el-icon><icon-menu /></el-icon>
+			<template #title>节点信息</template>
+		</el-menu-item>
+		<el-sub-menu index="/data">
+			<template #title>
+				<el-icon>
+					<Coin />
+				</el-icon>
+				<span>数据集管理</span>
+			</template>
+			<el-menu-item index="/original">原始数据集</el-menu-item>
+			<el-menu-item index="/ruler">对齐规则</el-menu-item>
+			<el-menu-item index="/aligned">对齐数据集</el-menu-item>
+		</el-sub-menu>
+		<el-menu-item index="/net">
+			<el-icon>
+				<document />
+			</el-icon>
+			<template #title>网络模型管理</template>
+		</el-menu-item>
+		<el-menu-item index="/job">
+			<el-icon>
+				<Odometer />
+			</el-icon>
+			<template #title>任务</template>
+		</el-menu-item>
+
+		<div style="margin-top: auto;margin-bottom: 5px;"> <!-- 移动到最下边 -->
+			<el-divider style="margin-top: 10px;margin-bottom: 10px;" />
+			<el-tooltip class="box-item" effect="dark" content="折叠导航" placement="top">
+				<el-icon v-if="!isCollapse" @click="isCollapse = !isCollapse" class="icon-large">
+					<Fold />
+				</el-icon>
+			</el-tooltip>
+			<el-tooltip class="box-item" effect="dark" content="展开导航" placement="top">
+				<el-icon v-if="isCollapse" @click="isCollapse = !isCollapse" class="icon-large">
+					<Expand />
+				</el-icon>
+			</el-tooltip>
+		</div>
+	</el-menu>
 	<RouterView />
 </template>
 
 <style scoped>
+.icon-large {
+	cursor: pointer;
+	margin-left: 10px;
+	/* 添加样式 */
+	font-size: 24px;
+	/* 根据需要调整大小 */
+	width: 24px;
+	/* 根据需要调整大小 */
+	height: 24px;
+	/* 根据需要调整大小 */
+}
+
+.el-menu-vertical {
+	margin: 10px 0 10px 5px;
+	max-width: 200px;
+	border-radius: 20px;
+	display: flex;
+	flex-direction: column;
+}
+
+
 .background {
 	/* 最下面的背景 */
 	position: absolute;
@@ -96,41 +114,21 @@ const goJob = () => {
 	top: 0;
 	width: 100%;
 	height: 100%;
-	background-color: #f6eded;
+	background: linear-gradient(180deg, #d4e8f6, #def1f9);
+	/* 渐变效果：浅蓝色到更浅的蓝色 */
 	z-index: -2;
 }
 
-.tac {
-	/* 左边导航栏 */
-	margin-right: 10px;
-	width: 350px;
-}
 
 .cuc2 {
 	margin: auto;
 	width: 90%;
+	cursor: pointer;
 }
 
-.el-menu {
-	border-right: 0;
-}
-
-.mb-2 {
-	font-weight: bold;
-	padding-top: 10px;
-	text-align: center;
-	color: #221815;
-	padding-bottom: 20px;
-}
-
-.el-menu-item.is-active {
-	background-color: #c3868b;
-}
-
-.tac .el-col-24 {
-	margin: 10px 0 8px 3px;
-	max-width: 350px;
-	background-color: #a7535a;
-	border-radius: 20px;
+.cuc1 {
+	margin: auto;
+	width: 45%;
+	cursor: pointer;
 }
 </style>
