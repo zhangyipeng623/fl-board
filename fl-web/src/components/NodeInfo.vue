@@ -89,8 +89,8 @@ onMounted(async () => {
 		</div>
 	</div>
 	<!-- 覆盖层 -->
-	<NodeStatus v-if="showNodeStatus" :node="current_node" @close="showNodeStatus = false"
-		:isCenterNode="isCenterNode" />
+	<NodeStatus v-if="showNodeStatus" :node="current_node" @close="showNodeStatus = false" :isCenterNode="isCenterNode"
+		:system-info="system_info[current_node?.name || '']" />
 </template>
 <style scoped>
 .container {

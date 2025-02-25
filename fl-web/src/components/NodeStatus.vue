@@ -8,6 +8,11 @@ import * as echarts from 'echarts';
 const props = defineProps<{
     node: DbNode | null
     isCenterNode: boolean
+    systemInfo: {
+        cpu: string;
+        gpu: string;
+        system: string;
+    }
 }>()
 
 const nodeInfo = ref({
@@ -15,30 +20,26 @@ const nodeInfo = ref({
     redis: "false",
     nginx: "false"
 })
-const selectedStat = ref<'cpu' | 'gpu' | 'memory'>('cpu')
-
+const selectedStat = ref<'cpu' | 'gpu'>('cpu')
+const selectedGpuModel = ref<string>('') // 新增当前选中的GPU型号
+const gpuModels = ref<string[]>([]) // 存储可用的GPU型号列表
+const hasGPU = ref(false);
 const nodeStatus = ref({
     cpu: {
-        usage: 24.5,
-        temp: 45,
-        freq: 3.6
+        usage: 0,
+        temp: 0,
+        freq: 0
     },
     gpu: {
-        usage: 18.2,
-        temp: 58,
-        mem_usage: 32
-    },
-    memory: {
-        total: 32,
-        used: 12.8,
-        free: 19.2
+        usage: 0,
+        temp: 0,
+        mem_usage: ""
     }
-})
+});
 type MetricPoint = { time: string; value: number };
-const metricsHistory = ref<Record<'cpu' | 'gpu' | 'memory', MetricPoint[]>>({
+const metricsHistory = ref<Record<'cpu' | 'gpu', MetricPoint[]>>({
     cpu: [],
     gpu: [],
-    memory: []
 });
 
 const updateHistory = (arr: MetricPoint[], newVal: number, time: string) => {
@@ -47,33 +48,84 @@ const updateHistory = (arr: MetricPoint[], newVal: number, time: string) => {
 // 实时数据获取
 const fetchMetrics = async () => {
     try {
-        const res = await axios.get(`http://${props.node?.ip}:${props.node?.port}/node/metrics`,);
+        const res = await axios.get(`http://${props.node?.ip}:${props.node?.port}/node/metrics`);
         const now = new Date().toLocaleTimeString();
 
-        // 更新数据历史
-        metricsHistory.value = {
-            cpu: updateHistory(metricsHistory.value.cpu, res.data.cpu, now),
-            gpu: updateHistory(metricsHistory.value.gpu, res.data.gpu, now),
-            memory: updateHistory(metricsHistory.value.memory, res.data.memory, now)
+        // 新增GPU存在性判断
+        hasGPU.value = !!res.data.gpu_info && Object.keys(res.data.gpu_info).length > 0;
+
+        // 处理CPU数据（新增部分）
+        metricsHistory.value.cpu = updateHistory(
+            metricsHistory.value.cpu,
+            res.data.cpu.cpu_usage,
+            now
+        );
+
+        // 更新CPU状态数据
+        nodeStatus.value.cpu = {
+            usage: res.data.cpu.cpu_usage,
+            temp: res.data.cpu.temp || 0, // 根据实际接口字段调整
+            freq: res.data.cpu.cpu_freq
         };
-        initChart(); // 更新图表
+
+        // 处理GPU数据（优化后的部分）
+        if (hasGPU.value) {
+            const gpuList = Object.keys(res.data.gpu_info);
+            gpuModels.value = gpuList;
+
+            if (gpuList.length > 0 && !selectedGpuModel.value) {
+                selectedGpuModel.value = gpuList[0];
+            }
+
+            if (selectedStat.value === 'gpu' && selectedGpuModel.value) {
+                const gpu = res.data.gpu_info[selectedGpuModel.value];
+                metricsHistory.value.gpu = updateHistory(
+                    metricsHistory.value.gpu,
+                    (gpu.used / gpu.total * 100),
+                    now
+                );
+
+                nodeStatus.value.gpu = {
+                    usage: Number((gpu.used / gpu.total * 100).toFixed(1)),
+                    temp: gpu.temperature,
+                    mem_usage: `${(gpu.used / 1024).toFixed(1)}/${(gpu.total / 1024).toFixed(1)}GB`
+                }
+            }
+        }
+
+        initChart();
     } catch (err) {
         console.error('获取指标失败:', err);
     }
 };
+
 let chart: echarts.ECharts;
+
 const initChart = () => {
     const dom = document.getElementById('metrics-chart');
     if (!dom) return;
 
-    chart = echarts.init(dom);
+    // 销毁旧实例
+    if (!chart) {
+        chart = echarts.init(dom);
+    }
+
     chart.setOption({
-        xAxis: { type: 'category' },
-        yAxis: { type: 'value' },
+        xAxis: {
+            type: 'category',
+            data: metricsHistory.value[selectedStat.value].map(i => i.time)
+        },
+        yAxis: {
+            type: 'value',
+            axisLabel: {
+                formatter: selectedStat.value === 'cpu' ? '{value}%' : '{value}%'
+            }
+        },
         series: [{
             data: metricsHistory.value[selectedStat.value].map(i => i.value),
             type: 'line',
-            smooth: true
+            smooth: true,
+            showSymbol: false // 隐藏数据点
         }]
     });
 };
@@ -90,7 +142,7 @@ const getNodeStatus = async () => {
 onMounted(async () => {
     getNodeStatus();
     fetchMetrics();
-    const timer = setInterval(fetchMetrics, 5000); // 5秒轮询
+    const timer = setInterval(fetchMetrics, 500); // 5秒轮询
     onUnmounted(() => clearInterval(timer));
 })
 
@@ -126,21 +178,29 @@ onMounted(async () => {
             </div>
             <div class="status-panel">
                 <div class="stat-switcher">
-                    <button v-for="stat in ['cpu', 'gpu', 'memory'] as const" :key="stat" @click="selectedStat = stat"
-                        :class="{ active: selectedStat === stat }">
+                    <button v-for="stat in ['cpu', 'gpu'] as const" :key="stat" @click="selectedStat = stat" :class="{
+                        active: selectedStat === stat,
+                        disabled: stat === 'gpu' && !hasGPU
+                    }" :disabled="stat === 'gpu' && !hasGPU">
                         {{ stat.toUpperCase() }}
                     </button>
+                    <select v-if="selectedStat === 'gpu' && gpuModels.length > 0" v-model="selectedGpuModel"
+                        class="gpu-selector">
+                        <option v-for="model in gpuModels" :key="model" :value="model">
+                            {{ model }}
+                        </option>
+                    </select>
+                    <div class="selected-name">
+                        {{ selectedStat === 'cpu' ? props.systemInfo.cpu : selectedGpuModel }}
+                    </div>
                 </div>
+
                 <div id="metrics-chart" style="height: 300px; width: 100%"></div>
                 <div class="stat-content" v-show="selectedStat === 'cpu'">
                     <div class="metric-row">
                         <div class="metric-item">
                             <span class="metric-label">使用率</span>
                             <span class="metric-value">{{ nodeStatus.cpu.usage }}%</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="metric-label">温度</span>
-                            <span class="metric-value">{{ nodeStatus.cpu.temp }}°C</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">频率</span>
@@ -161,22 +221,6 @@ onMounted(async () => {
                         <div class="metric-item">
                             <span class="metric-label">显存使用</span>
                             <span class="metric-value">{{ nodeStatus.gpu.mem_usage }}GHz</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="stat-content" v-show="selectedStat === 'memory'">
-                    <div class="metric-row">
-                        <div class="metric-item">
-                            <span class="metric-label">使用率</span>
-                            <span class="metric-value">{{ nodeStatus.memory.total }}%</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="metric-label">温度</span>
-                            <span class="metric-value">{{ nodeStatus.memory.used }}°C</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="metric-label">频率</span>
-                            <span class="metric-value">{{ nodeStatus.memory.free }}GHz</span>
                         </div>
                     </div>
                 </div>
@@ -319,7 +363,10 @@ onMounted(async () => {
     left: 15px;
     top: 15px;
     display: flex;
+    flex-wrap: wrap;
+    /* 允许换行 */
     gap: 8px;
+    align-items: center;
 
     button {
         padding: 4px 12px;
@@ -336,6 +383,45 @@ onMounted(async () => {
             border-color: transparent;
         }
     }
+}
+
+.stat-switcher button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f0f0f0;
+    border-color: #ddd;
+    color: #999;
+}
+
+.stat-switcher button.disabled:hover {
+    background: #f0f0f0;
+    transform: none;
+    box-shadow: none;
+}
+
+.gpu-selector {
+    margin-left: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background: white;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        border-color: #4B9BFF;
+    }
+}
+
+.selected-name {
+    margin-left: 15px;
+    font-size: 12px;
+    color: #666;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .stat-content {
