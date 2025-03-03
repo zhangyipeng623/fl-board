@@ -7,28 +7,31 @@ import head from "@/assets/images/head.png";
 const router = useRouter();
 
 const user_click = () => {
-	console.log("user click");
 	if (state.user.is_connect) {
 		router.push("/");
 	} else {
 		router.push("/login");
 	}
 };
-const logout = () => {
-	console.log("logout");
-	center
-		.get("/logout", {})
-		.then(() => {
-			user.get("/logout");
-		})
-		.catch((error) => {
-			console.error("Error logging out:", error);
-		});
-	localStorage.removeItem("userSession"); // 示例: 登录后设置 token
-	localStorage.removeItem("username");
-	localStorage.removeItem("ip");
-	state.updateUserInfo(0, "本地节点", "", "", false);
-	router.push("/login");
+const logout = async () => {
+	try {
+		// 确保两个请求都完成
+		await center.get("/logout");
+		await user.get("/logout");
+
+		// 清理本地存储
+		localStorage.clear();
+		state.updateUserInfo(0, "本地节点", "", "", false);
+
+		console.log("登出成功");
+		router.push("/login");
+	} catch (error) {
+		console.error("登出失败:", error);
+		// 即使请求失败也清除本地状态
+		localStorage.clear();
+		state.updateUserInfo(0, "本地节点", "", "", false);
+		router.push("/login");
+	}
 };
 const { title } = defineProps(["title"]);
 </script>

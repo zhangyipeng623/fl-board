@@ -1,0 +1,60 @@
+.el-table {
+    background-color: transparent !important;
+    border-radius: 10px;
+
+    // 设置表头背景透明
+    th.el-table__cell {
+        background-color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    // 设置单元格背景透明
+    td.el-table__cell {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    // 设置鼠标悬停效果
+    tr:hover td {
+        background-color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    // 设置表格内部背景透明
+    .el-table__inner-wrapper {
+        background-color: transparent !important;
+    }
+
+    // 设置表格头部和底部背景透明
+    .el-table__header-wrapper,
+    .el-table__footer-wrapper {
+        background-color: transparent !important;
+    }
+
+    // 设置表格体背景透明
+    .el-table__body-wrapper {
+        background-color: transparent !important;
+    }
+
+    // 设置固定列背景透明
+    .el-table__fixed-right,
+    .el-table__fixed {
+        background-color: transparent !important;
+    }
+
+    // 设置固定列阴影效果
+    .el-table__fixed-right-patch {
+        background-color: transparent !important;
+    }
+
+    // 设置斑马纹背景（如果使用）
+    tr.el-table__row--striped td {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    // 设置表格边框颜色为半透明
+    &::before {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    &--enable-row-hover .el-table__body tr:hover>td {
+        background-color: rgba(255, 255, 255, 0.4) !important;
+    }
+}

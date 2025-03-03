@@ -5,7 +5,7 @@ from utils.node import get_gpu_info
 node = APIRouter(prefix="/node")
 
 
-@node.post("/metrics")
+@node.get("/metrics")
 def get_metrics():
     HAS_GPU = torch.cuda.is_available()
     cpu_usage = psutil.cpu_percent(interval=0.5)

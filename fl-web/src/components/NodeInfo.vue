@@ -34,15 +34,15 @@ const getNodeStatus = async () => {
 		db_node.value = res.data.node_list;
 		system_info.value = res.data.system;
 		loading.value = false; // 新增：请求成功直接关闭loading
-		console.log(res.data);
 	} catch (e) {
-		console.log(e);
+		console.error(e);
 		loading.value = true; // 新增：请求失败保持loading
 	}
 };
 
 onMounted(async () => {
 	// 设置每 5 秒自动运行一次 getNodeStatus 函数
+	getNodeStatus();
 	const intervalId = setInterval(() => {
 		getNodeStatus();
 		if (db_node.value.length > 0) {
@@ -62,17 +62,16 @@ onMounted(async () => {
 
 <template>
 	<div class="container">
-		<Background />
 		<div class="center-node">
 			<NodeCard :node="state.center" :system-info="[
-				{ label: '系统', value: system_info.center?.system || '未知系统' },
-				{ label: 'CPU', value: system_info.center?.cpu || '未知CPU' },
-				{ label: 'GPU', value: system_info.center?.gpu || '未知GPU' }
+				{ label: '系统', value: system_info.center?.system },
+				{ label: 'CPU', value: system_info.center?.cpu },
+				{ label: 'GPU', value: system_info.center?.gpu }
 			]" @click="showNode(state.center)" />
 			<NodeCard :node="state.user" :is-location="true" :system-info="[
-				{ label: '系统', value: system_info[state.user.name]?.system || '未知系统' },
-				{ label: 'CPU', value: system_info[state.user.name]?.cpu || '未知CPU' },
-				{ label: 'GPU', value: system_info[state.user.name]?.gpu || '未知GPU' }
+				{ label: '系统', value: system_info[state.user.name]?.system },
+				{ label: 'CPU', value: system_info[state.user.name]?.cpu },
+				{ label: 'GPU', value: system_info[state.user.name]?.gpu }
 			]" @click="showNode(state.user)" />
 		</div>
 
@@ -82,9 +81,9 @@ onMounted(async () => {
 			element-loading-background="rgba(0, 0, 0, 0)">
 			<NodeCard v-for="(node, index) in db_node.filter(n => n.name !== state.user.name && n.name !== 'center')"
 				:key="index" :node="node" :system-info="[
-					{ label: '系统', value: system_info[node.name]?.system || '未知系统' },
-					{ label: 'CPU', value: system_info[node.name]?.cpu || '未知CPU' },
-					{ label: 'GPU', value: system_info[node.name]?.gpu || '未知GPU' }
+					{ label: '系统', value: system_info[node.name]?.system },
+					{ label: 'CPU', value: system_info[node.name]?.cpu },
+					{ label: 'GPU', value: system_info[node.name]?.gpu }
 				]" @click="showNode(node)"></NodeCard>
 		</div>
 	</div>

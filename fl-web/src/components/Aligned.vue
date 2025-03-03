@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Background from "./Background.vue";
 import { onMounted, ref } from "vue";
 import { center } from "@/utils/utils";
 
@@ -7,8 +6,6 @@ const alignedList = ref([]);
 
 onMounted(async () => {
 	const res = await center.get("/ruler/aligned",);
-
-	console.log(res.data.aligned_data);
 	alignedList.value = res.data.aligned_data;
 });
 
@@ -26,7 +23,6 @@ const parseFields = (fieldString: string) => {
 <template>
 	<div class="container">
 		<div class="scrollable-content">
-			<Background />
 			<el-table :data="alignedList">
 				<el-table-column fixed prop="aligned_db" label="数据库名称" align="center" />
 				<el-table-column label="原始数据库" header-align="center" align="center">
@@ -55,54 +51,11 @@ const parseFields = (fieldString: string) => {
 	background-color: rgba(255, 255, 255, 0.4);
 	border-radius: 10px;
 	height: calc(100vh - 80px);
+	backdrop-filter: blur(3px);
 }
 
 .scrollable-content {
 	height: 100%;
 	width: auto;
-}
-
-.el-table {
-	background-color: rgba(255, 255, 255, 0.4);
-	border-radius: 10px;
-	width: 100%;
-	height: 100%;
-}
-
-.overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(0, 0, 0, 0.5);
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	z-index: 1000;
-}
-
-.overlay-content {
-	background: white;
-	padding: 20px;
-	border-radius: 8px;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-}
-
-.button-container {
-	margin-top: 20px;
-}
-
-.node-title {
-	font-size: 30px;
-	font-weight: bold;
-	text-align: center;
-}
-
-.uploaded-file-name {
-	margin-top: 10px;
-	color: #333;
 }
 </style>

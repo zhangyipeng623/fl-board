@@ -15,7 +15,7 @@ def get_node():
         node["name"] = node["node_name"]
         url = f"http://{node['ip']}:{node['port']}/status"
         try:
-            if requests.get(url, timeout=3).status_code == 200:
+            if requests.get(url, timeout=1).status_code == 200:
                 node["is_connect"] = True
             else:
                 node["is_connect"] = False

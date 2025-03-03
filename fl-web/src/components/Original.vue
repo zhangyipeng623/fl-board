@@ -1,93 +1,47 @@
 <script setup lang="ts">
-import Background from "./Background.vue";
-import { onMounted, ref, computed } from "vue";
-import { center } from "@/utils/utils";
-import { Plus } from "@element-plus/icons-vue";
-import { state } from "@/utils/settings";
-import type { UploadInstance } from "element-plus";
+import { onMounted, ref } from "vue"
+import { center } from "@/utils/utils"
+import { Plus } from "@element-plus/icons-vue"
+import OriginalUpload from '@/components/OriginalUpload.vue'
 
-const tableData = ref([]);
-const showOverlay = ref(false);
-const hasHeader = ref(true);
-const tableName = ref("");
-
-// 定义上传请求头
-const uploadHeaders = {
-	session: localStorage.getItem("userSession"),
-};
-
-const uploadUrl = computed(() => {
-	return (
-		"http://" +
-		state.user.ip +
-		":" +
-		state.user.port +
-		"/db/upload"
-	);
-});
-const handleClick = () => {
-	console.log("click");
-};
+const tableData = ref([])
+const showUpload = ref(false)
 
 const handleAdd = () => {
-	showOverlay.value = true;
-};
+	showUpload.value = true
+}
 
-const beforeUpload = (file: File): boolean => {
-	const isCSV = file.type === "text/csv";
-	if (!isCSV) {
-		alert("上传文件只能是 CSV 格式!");
-		return false;
+const handleClick = () => {
+	console.log("click")
+}
+
+const handleUploadSuccess = () => {
+	// 刷新表格数据
+	loadTableData()
+}
+
+const loadTableData = async () => {
+	try {
+		const res = await center.get("/db/original")
+		tableData.value = res.data.db_list
+	} catch (error) {
+		console.error("请求数据失败:", error)
 	}
-	return true;
-};
+}
 
-const uploadRef = ref<UploadInstance>();
-
-const handleUpload = () => {
-	console.log("上传逻辑处理");
-	console.log("是否有表头:", hasHeader.value);
-	uploadRef.value!.submit();
-};
-const handleUploadError = (err: any, file: any) => {
-	console.error("上传失败:", err); // 打印错误信息
-	alert(`上传失败: ${file.name} - ${err.message || "未知错误"}`); // 显示错误提示
-};
-
-const handleUploadSuccess = (res: any) => {
-	console.log("上传成功:", res);
-	showOverlay.value = false;
-	center
-		.get("/db/original",)
-		.then((res) => {
-			console.log(res);
-			tableData.value = res.data.db_list;
-		})
-		.catch((error) => {
-			console.error("请求数据失败:", error);
-		});
-};
-
-onMounted(async () => {
-	const res = await center.get(
-		"http://" + state.center.ip + ":" + state.center.port + "/db/original");
-
-	console.log(res);
-	tableData.value = res.data.db_list;
-});
-
+onMounted(() => {
+	loadTableData()
+})
 </script>
 
 <template>
 	<div class="container">
 		<div class="scrollable-content">
-			<Background />
 			<el-table :data="tableData">
 				<el-table-column fixed prop="db_name" label="数据库名称" align="center" />
 				<el-table-column prop="username" label="节点名称" align="center" />
 				<el-table-column prop="data_number" label="数据量" align="center" />
-				<el-table-column prop="field" label="字段" header-align="center" align="center">
-				</el-table-column>
+				<el-table-column prop="field" label="字段" header-align="center" align="center" />
 				<el-table-column fixed="right" label="操作" min-width="120" align="center">
 					<template #header>
 						操作
@@ -100,34 +54,13 @@ onMounted(async () => {
 						</el-tooltip>
 					</template>
 					<template #default>
-						<el-button link type="primary" size="small" @click="handleClick">
-							详细
-						</el-button>
+						<el-button link type="primary" size="small" @click="handleClick">详细</el-button>
 					</template>
 				</el-table-column>
 			</el-table>
 		</div>
-		<div v-if="showOverlay" class="overlay">
-			<div class="overlay-content">
-				<span class="node-title">上传数据集</span>
-				<el-upload ref="uploadRef" class="upload-demo" :action="uploadUrl" :headers="uploadHeaders"
-					:auto-upload="false" :before-upload="beforeUpload" :on-success="handleUploadSuccess"
-					:on-error="handleUploadError" :data="{
-						hasHeader: hasHeader,
-						table_name: tableName,
-						user_id: state.user.id,
-					}" accept=".csv">
-					<el-button size="small" type="primary">点击上传 CSV 文件</el-button>
-				</el-upload>
-				<el-checkbox v-model="hasHeader">是否有表头</el-checkbox>
-				<el-input v-model="tableName" placeholder="数据库名称" />
-				<div>
-					<el-button type="primary" @click="handleUpload">上传</el-button>
-					<el-button @click="showOverlay = false">关闭</el-button>
-				</div>
-			</div>
-		</div>
 	</div>
+	<OriginalUpload v-model:show="showUpload" @upload-success="handleUploadSuccess" />
 </template>
 
 <style scoped>
@@ -139,54 +72,11 @@ onMounted(async () => {
 	background-color: rgba(255, 255, 255, 0.4);
 	border-radius: 10px;
 	height: calc(100vh - 80px);
+	backdrop-filter: blur(3px);
 }
 
 .scrollable-content {
 	height: 100%;
 	width: auto;
-}
-
-.el-table {
-	background-color: rgba(255, 255, 255, 0.4);
-	border-radius: 10px;
-	width: 100%;
-	height: 100%;
-}
-
-.overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(0, 0, 0, 0.5);
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	z-index: 1000;
-}
-
-.overlay-content {
-	background: white;
-	padding: 20px;
-	border-radius: 8px;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-}
-
-.button-container {
-	margin-top: 20px;
-}
-
-.node-title {
-	font-size: 30px;
-	font-weight: bold;
-	text-align: center;
-}
-
-.uploaded-file-name {
-	margin-top: 10px;
-	color: #333;
 }
 </style>

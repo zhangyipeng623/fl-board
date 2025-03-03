@@ -27,7 +27,7 @@ async def check_session(request: Request, call_next):
     ]
     if request.url.path in not_check_session:
         return await call_next(request)
-    session = request.headers.get("session")
+    session = request.headers.get("Authorization")
     user_info = redis.get(session)
     if user_info is None:
         raise HTTPException(401, detail="用户未登录")
@@ -41,6 +41,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=config.Allow_methods,  # 允许所有方法 [GET, POST, OPTIONS, etc]
     allow_headers=config.Allow_headers,  # 允许所有请求头
+    expose_headers=["*", "Authorization"],
 )
 
 

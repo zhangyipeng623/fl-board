@@ -42,7 +42,7 @@ async def net_upload(
     detail: str = Form(),
     user_id: int = Form(),
 ):
-    session = request.headers.get("session")
+    session = request.headers.get("Authorization")
     user_info = redis.get(session)
     user_info = json.loads(user_info)
     if user_info["id"] != user_id:

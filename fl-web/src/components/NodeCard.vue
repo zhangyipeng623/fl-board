@@ -38,7 +38,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineEmits } from 'vue';
 import type { DbNode } from "@/utils/settings";
 
 const props = defineProps({

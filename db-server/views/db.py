@@ -26,7 +26,7 @@ def original():
 
 @db.post("/upload")
 def upload(request: Request, db_info: DBInfo):
-    session = request.headers.get("session")
+    session = request.headers.get("Authorization")
     user_info = redis.get(session)
     user_info = json.loads(user_info)
     if user_info["id"] != db_info.user_id:

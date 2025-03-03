@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Form, UploadFile, File, HTTPException, Request
-import csv, shutil, requests, json, uuid
+import csv, shutil, requests, json, uuid, os
 from config import config
 
 db = APIRouter(prefix="/db")
@@ -18,6 +18,7 @@ def upload(
     column_name = []
     file_name = uuid.uuid4()
     file_path = f"static/uploads/{file.filename}"
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     data_count = 0
@@ -45,21 +46,19 @@ def upload(
             "field": json.dumps(column_name),
             "file_name": str(file_name),
         }
-        user_session = request.headers.get("session")
+        user_session = request.headers.get("Authorization")
         res = requests.post(
             f"http://{config.center_host}:{config.center_port}/db/upload",
             json=db_info,
-            headers={"session": user_session},
+            headers={"Authorization": user_session},
         )
         if res.status_code != 200:
             raise HTTPException(402, detail=f"数据管理中心上传失败,err:{res.text}")
         else:
-            import os
 
             os.remove(file_path)
             return {"message": "上传成功"}
     except Exception as e:
-        import os
 
         os.remove(original_file)
         os.remove(file_path)

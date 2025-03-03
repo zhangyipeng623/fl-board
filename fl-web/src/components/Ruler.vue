@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import Background from "./Background.vue";
 import { onMounted, ref, computed } from "vue";
 import { center } from "@/utils/utils";
-
 import { Plus } from "@element-plus/icons-vue";
 import { ElTreeSelect } from "element-plus";
 import type Node from "element-plus/es/components/tree/src/model/node";
@@ -33,7 +31,7 @@ const rulerDetail = ref();
 const detailTitle = ref("");
 
 const selectedOperators = ref<string[]>([]);
-const selectedData = ref([]);
+const selectedData = ref<any[]>([]);
 
 const handleClick = () => {
 	console.log("click");
@@ -220,10 +218,8 @@ const handlePreviousStep = () => {
 };
 
 const handleSubmit = async () => {
-	console.log(ruler.value);
 	const currentDb = originalDb.value[currentOriginalDbIndex.value]; // 获取当前数据库名称
 	for (let i = 0; i < alignedFieldArray.value.length; i++) {
-		console.log(i, "i");
 		if (selectedOperators.value[i] === undefined) {
 			alert("请选择对齐字段符号(" + alignedFieldArray.value[i] + ")");
 			return;
@@ -352,7 +348,6 @@ const alignedFieldArray = computed(() => {
 <template>
 	<div class="container">
 		<div class="scrollable-content">
-			<Background />
 			<el-table :data="rulerList">
 				<el-table-column fixed prop="ruler_name" label="对齐规则名称" align="center" />
 				<el-table-column prop="aligned_db" label="对齐数据库" align="center"></el-table-column>/>
@@ -471,18 +466,12 @@ const alignedFieldArray = computed(() => {
 	background-color: rgba(255, 255, 255, 0.4);
 	border-radius: 10px;
 	height: calc(100vh - 80px);
+	backdrop-filter: blur(3px);
 }
 
 .scrollable-content {
 	height: 100%;
 	width: auto;
-}
-
-.el-table {
-	background-color: rgba(255, 255, 255, 0.4);
-	border-radius: 10px;
-	width: 100%;
-	height: 100%;
 }
 
 .overlay {

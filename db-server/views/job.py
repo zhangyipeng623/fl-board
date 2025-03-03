@@ -23,7 +23,7 @@ def get_job_list():
 
 @job.post("/add")
 def job_add(job_info: Item, request: Request):
-    session = request.headers.get("session")
+    session = request.headers.get("Authorization")
     user_info = json.loads(redis.get(session))
 
     net = Net.select().where(Net.id == job_info.net).first()

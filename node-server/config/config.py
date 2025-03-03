@@ -32,14 +32,14 @@ class Config(object):
     center_port = 8000
 
     # database config
-    Redis_host = "192.168.3.107"
+    Redis_host = "10.211.55.14"
     Redis_port = 6379
     Redis_db = 0
     Redis_password = "password"
 
-    Mysql_host = "192.168.3.107"
+    Mysql_host = "10.211.55.14"
     Mysql_port = 3306
-    Mysql_user = "fl"
+    Mysql_user = "root"
     Mysql_password = "password"
     Mysql_db = "fl"
 

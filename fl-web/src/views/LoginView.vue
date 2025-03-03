@@ -1,41 +1,71 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { state } from "@/utils/settings";
-import axios from "axios";
 import { center } from "@/utils/utils";
+import { User, Lock, Loading } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'  // 添加 ElMessage 导入
+import backgroundImage from "@/assets/images/login.jpg";
 const username = ref("");
 const password = ref("");
 const showLoginDialog = ref(false); // 控制弹窗显示的状态
+const loading = ref(false);
 const router = useRouter();
 
 const handleLogin = async () => {
-	// 这里可以添加实际的登录逻辑，比如调用 API
+	// 添加表单验证
+	if (!username.value || !password.value) {
+		ElMessage({
+			message: '请输入用户名和密码',
+			type: 'warning',
+			showClose: true,
+			duration: 2000
+		});
+		return;
+	}
+
+	loading.value = true;
 	try {
-		const res = await center.post("/login",
-			{
-				username: username.value,
-				password: password.value,
-			}
+		const res = await center.post("/login", {
+			username: username.value,
+			password: password.value,
+		});
+
+		localStorage.setItem("userSession", res.data.session);
+		localStorage.setItem("username", username.value);
+		localStorage.setItem("ip", res.data.ip);
+		state.updateCenterInfo(true);
+		state.updateUserInfo(
+			res.data.id,
+			username.value,
+			res.data.ip,
+			res.data.port,
+			true
 		);
-		if (res.status === 200) {
-			localStorage.setItem("userSession", res.data.session); // 示例: 登录后设置 token
-			localStorage.setItem("username", username.value);
-			localStorage.setItem("ip", res.data.ip);
-			state.updateCenterInfo(true);
-			state.updateUserInfo(
-				res.data.id,
-				username.value,
-				res.data.ip,
-				res.data.port,
-				true
-			);
-			router.push({ name: "home" }); // 登录后重定向到主页
-		} else {
-			alert("登录失败，请检查用户名和密码");
-		}
-	} catch (error) {
-		alert("登录失败，请检查用户名和密码");
+		ElMessage({
+			message: '登录成功',
+			type: 'success',
+			showClose: true,
+			duration: 2000
+		});
+		router.push({ name: "home" });
+	} catch (error: any) {
+		console.error('登录错误详情:', {
+			error,
+			response: error?.response,
+			data: error?.response?.data,
+			message: error?.response?.data?.message
+		});
+
+		nextTick(() => {
+			// 确保在控制台也能看到消息内容
+			const message = error.response?.data?.detail || '登录失败：服务器连接异常';
+			console.log('将要显示的错误消息:', message);
+
+			alert('登录失败：' + message)
+		});
+	} finally {
+		loading.value = false;
 	}
 };
 
@@ -47,24 +77,32 @@ onMounted(() => {
 
 <template>
 	<div class="login-view">
+		<div class="background-container">
+			<img :src="backgroundImage" alt="Background" class="background-image" />
+			<div class="background-overlay"></div>
+		</div>
 		<div v-if="showLoginDialog" class="login-dialog">
-			<span class="title">账号登录</span>
+			<span class="welcome">欢迎登录</span>
 			<form @submit.prevent="handleLogin">
 				<div class="input-group">
-					<span class="input-title">用户名:</span>
+					<el-icon class="input-icon">
+						<User />
+					</el-icon>
 					<input class="style-input" v-model="username" placeholder="用户名" />
 				</div>
-				<p></p>
 				<div class="input-group">
-					<span class="input-title">密码:</span>
+					<el-icon class="input-icon">
+						<Lock />
+					</el-icon>
 					<input class="style-input" v-model="password" type="password" placeholder="密码" />
 				</div>
-				<p></p>
 				<div class="button-container">
-					<button class="style-button" type="submit">登录</button>
-					<p style="text-align: center">
-						<button class="style-button" type="button">忘记密码</button>
-					</p>
+					<button class="style-button" type="submit" :disabled="loading">
+						<span v-if="!loading">登录</span>
+						<el-icon v-else class="is-loading">
+							<Loading />
+						</el-icon>
+					</button>
 				</div>
 			</form>
 		</div>
@@ -72,91 +110,208 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.button-container {
-	margin-top: 20px;
-	display: flex;
-	justify-content: space-between;
-}
-
-.style-button {
-	width: 60px;
-	height: 30px;
-	background-color: #ffffff;
-	/* 按钮的背景颜色 */
-	color: black;
-	/* 按钮的文字颜色 */
-	border: none;
-	/* 去掉默认边框 */
-	border-radius: 5px;
-	/* 圆角边框 */
-	cursor: pointer;
-	/* 鼠标悬浮时显示为手型 */
-	justify-content: center;
-	transition: background-color 0.3s;
-	/* 增加背景颜色变化效果 */
-}
-
-.style-button:active {
-	transform: scale(0.95);
-	/* 按下时缩小 */
-	background-color: grey;
-	/* 按下时背景颜色变化 */
-}
-
-.style-input {
-	padding: 10px;
-	/* 内边距 */
-	border: 2px solid #ebd7d8;
-	/* 边框颜色和大小 */
-	border-radius: 5px;
-	/* 圆角边框 */
-	outline: none;
-	/* 去掉聚焦时的默认轮廓 */
-	transition: border-color 0.3s;
-	/* 增加边框颜色变化效果 */
-}
-
-.input-group {
-	display: flex;
-	/* 使用 flex 布局 */
-	align-items: center;
-	/* 垂直居中对齐 */
-}
-
-.input-title {
-	width: 80px;
-	/* 标签宽度 */
-	margin-right: 10px;
-	/* 标签和输入框之间的间距 */
-}
-
-.title {
-	font-size: 20px;
-	margin-bottom: 20px;
-	text-align: center;
-}
-
 .login-view {
 	position: fixed;
 	width: 100%;
 	height: 100%;
 	z-index: 9999;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.background-container {
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	z-index: -2;
+	overflow: hidden;
+}
+
+.background-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	animation: starMove 3.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+	transform-origin: center center;
+	will-change: transform, filter;
+}
+
+@keyframes starMove {
+	0% {
+		transform: scale(1.3) rotate(-8deg);
+		filter: brightness(0.7);
+	}
+
+	100% {
+		transform: scale(1.04) rotate(1deg);
+		/* 最后稍微放大并轻微旋转 */
+		filter: brightness(1);
+	}
+}
+
+.background-overlay {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	backdrop-filter: blur(2px);
+	background-color: rgba(0, 0, 0, 0.3);
+	/* 降低初始透明度 */
+	opacity: 0;
+	animation: overlayFade 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes overlayFade {
+	0% {
+		opacity: 0;
+		backdrop-filter: blur(1px);
+		/* 初始就有轻微模糊 */
+	}
+
+	100% {
+		opacity: 0.5;
+		/* 降低最终透明度 */
+		backdrop-filter: blur(2px);
+	}
 }
 
 .login-dialog {
-	width: 450x;
-	height: 220px;
+	width: 350px;
+	padding: 40px 20px;
+	/* 增加上下内边距 */
 	border-radius: 10px;
-	border: 1px solid #ccc;
-	padding: 20px;
-	justify-content: center;
-	background-color: #ebd7d8;
+	background-color: transparent;
+	/* 设置为全透明 */
+	box-shadow: none;
+	/* 移除阴影 */
+	text-align: center;
+	/* 居中对齐 */
+	opacity: 0;
+	animation: fadeIn 1s ease-out 1s forwards;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.welcome {
+	font-size: 32px;
+	/* 增大字体 */
+	color: #fff;
+	text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+	/* 添加文字阴影效果 */
+}
+
+.input-group {
+	display: flex;
+	align-items: center;
+	margin-bottom: 20px;
+	position: relative;
+	border-radius: 20px;
+}
+
+.input-icon {
 	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-	z-index: 1000;
-	/* 确保在最上层 */
+	left: 15px;
+	color: rgba(255, 255, 255, 0.9);
+	/* 增加透明度 */
+	font-size: 18px;
+	/* 调整图标大小 */
+}
+
+.style-input {
+	padding: 12px 12px 12px 40px;
+	border: 1px solid rgba(255, 255, 255, 0.5);
+	border-radius: 50px;
+	outline: none;
+	transition: all 0.3s ease;
+	width: 100%;
+	background-color: rgba(255, 255, 255, 0.1);
+	color: #ffffff;
+	position: relative;
+	z-index: 1;
+	font-size: 16px;
+	/* 增大字体大小 */
+	font-weight: 400;
+	/* 调整字重 */
+	letter-spacing: 0.5px;
+	/* 增加字间距 */
+}
+
+/* 移除输入框的模糊效果，只保留背景半透明 */
+.style-input {
+	backdrop-filter: none;
+}
+
+.style-input::placeholder {
+	color: rgba(255, 255, 255, 0.7);
+	font-size: 16px;
+	/* 占位符字体大小也相应调整 */
+}
+
+.style-input:focus {
+	border-color: #00F5A0;
+	box-shadow: 0 0 10px rgba(0, 217, 245, 0.2);
+	background-color: rgba(255, 255, 255, 0.15);
+}
+
+.button-container {
+	margin-top: 20px;
+	display: flex;
+	justify-content: center;
+}
+
+.style-button {
+	width: 120px;
+	height: 40px;
+	background: linear-gradient(45deg, #00F5A0, #00D9F5);
+	color: white;
+	border: none;
+	border-radius: 50px;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	font-weight: 500;
+	letter-spacing: 1px;
+	box-shadow: 0 2px 10px rgba(0, 217, 245, 0.3);
+}
+
+.style-button:hover {
+	background: linear-gradient(45deg, #00D9F5, #00F5A0);
+	transform: translateY(-2px);
+	box-shadow: 0 4px 15px rgba(0, 245, 160, 0.4);
+}
+
+.style-button:active {
+	transform: scale(0.95) translateY(0);
+	box-shadow: 0 2px 8px rgba(0, 217, 245, 0.3);
+}
+
+.style-button:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+.is-loading {
+	animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+	from {
+		transform: rotate(0);
+	}
+
+	to {
+		transform: rotate(360deg);
+	}
 }
 </style>

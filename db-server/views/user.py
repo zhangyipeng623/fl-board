@@ -32,6 +32,7 @@ def register_user(form: RegisterForm):
     node = Node.get_or_none(Node.ip == form.ip, Node.port == form.port)
     if node is None:
         node = Node.create(
+            node_name=form.username,
             ip=form.ip,
             port=form.port,
             system=form.system,
@@ -130,7 +131,7 @@ def get_status():
 
 @user.get("/check_session")
 def check_session(request: Request):
-    session = request.headers.get("session")
+    session = request.headers.get("Authorization")
     user_info = redis.get(session)
     if user_info is None:
         raise HTTPException(401, detail="用户未登录")
@@ -140,6 +141,6 @@ def check_session(request: Request):
 
 @user.get("/logout")
 def logout(request: Request):
-    session = request.headers.get("session")
+    session = request.headers.get("Authorization")
     redis.delete(session)
     return {"message": "用户已退出"}

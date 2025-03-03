@@ -22,10 +22,11 @@ async def check_session(request: Request, call_next):
         "/aligned/get_data",
         "/aligned/add",
         "/job/start",
+        "/node/metrics",
     ]
     if request.url.path in not_check_session:
         return await call_next(request)
-    session = request.headers.get("session")
+    session = request.headers.get("Authorization")
     user_id = redis.get(session)
     if user_id is None:
         raise HTTPException(401, detail="用户未登录")

@@ -46,7 +46,6 @@ const netDetail = (net_id: number) => {
 			}
 		)
 		.then((res) => {
-			console.log(res);
 			code.value = Prism.highlight(
 				res.data.code,
 				Prism.languages.python,
@@ -68,7 +67,6 @@ const handleAdd = () => {
 			},
 		})
 		.then((res) => {
-			console.log(res);
 			if (res.status == 200) {
 				db_list.value = res.data.ruler_list;
 			} else {
@@ -88,7 +86,6 @@ const handleAdd = () => {
 			}
 		)
 		.then((res) => {
-			console.log(res);
 			netList.value = res.data.net_list;
 		})
 		.catch((error) => {
@@ -174,7 +171,6 @@ onMounted(async () => {
 <template>
 	<div class="container">
 		<div class="scrollable-content">
-			<Background />
 			<el-table :data="tableData">
 				<el-table-column fixed prop="job_id" label="任务ID" align="center" />
 				<el-table-column prop="node_name" label="上传节点" width="200" align="center" />
@@ -258,6 +254,7 @@ onMounted(async () => {
 	background-color: rgba(255, 255, 255, 0.4);
 	border-radius: 10px;
 	height: calc(100vh - 80px);
+	backdrop-filter: blur(3px);
 }
 
 .scrollable-content {
@@ -265,12 +262,27 @@ onMounted(async () => {
 	width: auto;
 }
 
-.el-table {
-	background-color: rgba(255, 255, 255, 0.4);
+:deep(.el-table) {
+	background-color: transparent !important;
 	border-radius: 10px;
-	width: 100%;
-	height: 100%;
 }
+
+:deep(.el-table th) {
+	background-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+:deep(.el-table td) {
+	background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+:deep(.el-table tr:hover td) {
+	background-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+:deep(.el-table--enable-row-hover .el-table__body tr:hover>td) {
+	background-color: rgba(255, 255, 255, 0.4) !important;
+}
+
 
 .overlay {
 	position: fixed;

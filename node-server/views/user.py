@@ -48,7 +48,7 @@ def get_status():
 
 @router.get("/check_session")
 def check_session(request: Request):
-    session = request.headers.get("session")
+    session = request.headers.get("Authorization")
     user_info = redis.get(session)
     if user_info is None:
         raise HTTPException(401, detail="用户未登录")
@@ -57,6 +57,6 @@ def check_session(request: Request):
 
 @router.get("/logout")
 def logout(request: Request):
-    session = request.headers.get("session")
+    session = request.headers.get("Authorization")
     redis.delete(session)
     return {"message": "用户已退出"}
