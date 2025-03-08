@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { center } from "@/utils/utils";
+import { getTypeTagStyle } from "@/utils/styleUtils";
 
 const alignedList = ref([]);
 
@@ -9,15 +10,8 @@ onMounted(async () => {
 	alignedList.value = res.data.aligned_data;
 });
 
-// 解析字段字符串为数组并格式化为字符串
-const parseFields = (fieldString: string) => {
-	if (fieldString.includes(",")) {
-		const fieldsArray = fieldString.split(","); // 解析字符串为数组
-		return fieldsArray.join("; "); // 将数组转换为以分号分隔的字符串
-	} else {
-		return fieldString;
-	}
-};
+
+
 </script>
 
 <template>
@@ -27,16 +21,31 @@ const parseFields = (fieldString: string) => {
 				<el-table-column fixed prop="aligned_db" label="数据库名称" align="center" />
 				<el-table-column label="原始数据库" header-align="center" align="center">
 					<template #default="{ row }">
-						{{ parseFields(row.original_db) }}
-					</template> </el-table-column>/>
+						<div class="field-container">
+							<el-tag v-for="(item, index) in row.original_db" :key="index" class="database-tag"
+								effect="plain" type="info">
+								<span class="field-name">{{ item.name }}</span>
+								<el-tag size="small" class="type-tag" effect="dark">
+									{{ item.nodename }}
+								</el-tag>
+							</el-tag>
+						</div>
+					</template>
+				</el-table-column>/>
 				<el-table-column prop="data_count" label="数据量" align="center" />
 				<el-table-column label="字段" header-align="center" align="center">
 					<template #default="{ row }">
-						{{ parseFields(row.ruler_field) }}
+						<div class="field-container">
+							<el-tag v-for="(field, index) in row.ruler_field" :key="index" class="field-tag"
+								effect="plain" type="info">
+								<span class="field-name">{{ field.field }}</span>
+								<el-tag size="small" class="type-tag" :type="getTypeTagStyle(field.type)">
+									{{ field.type }}
+								</el-tag>
+							</el-tag>
+						</div>
 					</template>
 				</el-table-column>
-				<el-table-column prop="created_at" sortable label="创建时间" align="center" />
-				<el-table-column prop="updated_at" sortable label="更新时间" align="center" />
 			</el-table>
 		</div>
 	</div>
@@ -57,5 +66,51 @@ const parseFields = (fieldString: string) => {
 .scrollable-content {
 	height: 100%;
 	width: auto;
+}
+
+.database-tag {
+	margin: 2px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	background-color: var(--el-fill-color-light);
+}
+
+.rule-tag {
+	margin: 2px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	transition: all 0.3s;
+}
+
+.rule-tag:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.field-tag {
+	margin: 2px;
+	padding: 4px 8px;
+	border-radius: 4px;
+}
+
+.type-tag {
+	margin-left: 6px;
+	font-style: normal;
+	border-radius: 3px;
+}
+
+.field-name {
+	color: #606266;
+	font-size: 13px;
+}
+
+/* 复用 Original.vue 的容器样式 */
+.field-container {
+	max-height: 150px;
+	overflow-y: auto;
+	padding: 4px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
 }
 </style>

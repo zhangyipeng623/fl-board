@@ -15,16 +15,25 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.middleware("http")
 async def check_session(request: Request, call_next):
-    not_check_session = [
+    center_request = [
         "/login",
-        "/check_session",
-        "/status",
         "/aligned/get_data",
         "/aligned/add",
         "/job/start",
+        "/aligned/update_field_type"
+    ]
+    not_check_session = [
+        "/check_session",
+        "/status",
+
         "/node/metrics",
     ]
     if request.url.path in not_check_session:
+        return await call_next(request)
+    elif request.url.path in center_request:
+        ip = request.headers.get("x-forwarded-for")
+        if ip != config.center_host:
+            raise HTTPException(401, detail="请求中心服务器")
         return await call_next(request)
     session = request.headers.get("Authorization")
     user_id = redis.get(session)

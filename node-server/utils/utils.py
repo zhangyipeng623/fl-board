@@ -14,6 +14,35 @@ def run_in_thread(func):
     return wrapper
 
 
+def map_dtype_to_simple_type(dtype):
+    """将数据类型映射为简单类型
+
+    Args:
+        dtype: 输入的数据类型
+
+    Returns:
+        str: 映射后的简单类型名称，可能的返回值包括:
+            - 'int': 整数类型
+            - 'float': 浮点数类型 
+            - 'str': 字符串类型
+            - 'array': 数组类型
+            - 'list': 列表类型
+    """
+    dtype_str = str(dtype)
+    if 'int' in dtype_str:
+        return 'int'
+    elif 'float' in dtype_str:
+        return 'float'
+    elif 'object' in dtype_str or 'O' == dtype_str:
+        return 'str'
+    elif 'array' in dtype_str:
+        return 'array'
+    elif 'list' in dtype_str:
+        return 'list'
+    else:
+        return 'str'  # 默认返回str类型
+
+
 def add(*args):
     return round(sum(args), 2)
 

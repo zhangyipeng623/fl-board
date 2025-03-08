@@ -28,6 +28,8 @@ async def check_session(request: Request, call_next):
     if request.url.path in not_check_session:
         return await call_next(request)
     session = request.headers.get("Authorization")
+    if session is None:
+        raise HTTPException(401, detail="用户未登录")
     user_info = redis.get(session)
     if user_info is None:
         raise HTTPException(401, detail="用户未登录")

@@ -16,6 +16,7 @@
     "echarts": "^5.6.0",
     "element-plus": "^2.8.4",
     "prismjs": "^1.29.0",
+    "sass-embedded": "^1.85.1",
     "vue": "^3.4.29",
     "vue-echarts": "^7.0.3",
     "vue-router": "^4.3.3"

@@ -1,5 +1,5 @@
-import './assets/styles/globalTable.scss'
-import './assets/main.css'
+import '@/assets/styles/globalTable.scss'
+import '@/assets/main.css'
 
 import { createApp } from 'vue'
 import ElementPlus from 'element-plus'

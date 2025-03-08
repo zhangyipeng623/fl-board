@@ -3,7 +3,11 @@ from pydantic import BaseModel
 from peewee import OperationalError
 from model import User, redis, db, Node
 from config import config
-import json, psutil, uuid, bcrypt, requests
+import json
+import psutil
+import uuid
+import bcrypt
+import requests
 
 
 user = APIRouter()
@@ -32,7 +36,7 @@ def register_user(form: RegisterForm):
     node = Node.get_or_none(Node.ip == form.ip, Node.port == form.port)
     if node is None:
         node = Node.create(
-            node_name=form.username,
+            nodename=form.username,
             ip=form.ip,
             port=form.port,
             system=form.system,
@@ -56,15 +60,14 @@ def register_user(form: RegisterForm):
 @user.post("/login")  # 根路由
 def login(form: LoginForm):
 
-    try:
-        # 从数据库获取用户信息
-        user = User.select().where(User.username == form.username).get()
-        # 校验密码是否匹配
-        if not bcrypt.checkpw(
-            form.password.encode("utf-8"), user.password.encode("utf-8")
-        ):
-            raise HTTPException(401, detail="用户名或密码错误")
-    except User.DoesNotExist:
+    # 从数据库获取用户信息
+    user = User.select().where(User.username == form.username).get_or_none()
+    if user is None:
+        raise HTTPException(401, detail="用户名或密码错误")
+    # 校验密码是否匹配
+    if not bcrypt.checkpw(
+        form.password.encode("utf-8"), user.password.encode("utf-8")
+    ):
         raise HTTPException(401, detail="用户名或密码错误")
     session = str(uuid.uuid4())
     user_info = json.dumps(
@@ -111,7 +114,7 @@ def get_status():
         # 使用更具体的异常类型（如 redis.ConnectionError）
         redis.ping()  # 假设 redis_client 是已配置的客户端
         status["redis"] = True
-    except redis.ConnectionError as e:
+    except Exception as e:
         status["redis"] = False
 
     # ---------- 检查 Nginx 进程 ----------

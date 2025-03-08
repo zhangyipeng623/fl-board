@@ -81,15 +81,15 @@ onMounted(async () => {
 			element-loading-background="rgba(0, 0, 0, 0)">
 			<NodeCard v-for="(node, index) in db_node.filter(n => n.name !== state.user.name && n.name !== 'center')"
 				:key="index" :node="node" :system-info="[
-					{ label: '系统', value: system_info[node.name]?.system },
-					{ label: 'CPU', value: system_info[node.name]?.cpu },
-					{ label: 'GPU', value: system_info[node.name]?.gpu }
-				]" @click="showNode(node)"></NodeCard>
+				{ label: '系统', value: system_info[node.name]?.system },
+				{ label: 'CPU', value: system_info[node.name]?.cpu },
+				{ label: 'GPU', value: system_info[node.name]?.gpu }
+			]" @click="showNode(node)"></NodeCard>
 		</div>
 	</div>
 	<!-- 覆盖层 -->
-	<NodeStatus v-if="showNodeStatus" :node="current_node" @close="showNodeStatus = false" :isCenterNode="isCenterNode"
-		:system-info="system_info[current_node?.name || '']" />
+	<NodeStatus v-if="showNodeStatus" :node="current_node" @close="showNodeStatus = false"
+		:isCenterNode="isCenterNode" />
 </template>
 <style scoped>
 .container {

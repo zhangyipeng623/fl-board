@@ -11,6 +11,7 @@ def monitor_and_restart_processes(processes):
             if not process.is_alive():
                 print(f"[监控] 进程 {process.name} 已退出，正在重启...")
                 # 重新创建进程
+                new_process = multiprocessing.Process()
                 if process.name == "start_app":
                     new_process = multiprocessing.Process(
                         target=start_app, name="start_app"

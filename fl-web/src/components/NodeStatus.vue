@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import axios from 'axios'
 import type { DbNode } from "@/utils/settings";
 import * as echarts from 'echarts';
@@ -8,11 +8,6 @@ import * as echarts from 'echarts';
 const props = defineProps<{
     node: DbNode | null
     isCenterNode: boolean
-    systemInfo: {
-        cpu: string;
-        gpu: string;
-        system: string;
-    }
 }>()
 
 const nodeInfo = ref({
@@ -21,9 +16,23 @@ const nodeInfo = ref({
     nginx: "false"
 })
 const selectedStat = ref<'cpu' | 'gpu'>('cpu')
-const selectedGpuModel = ref<string>('') // 新增当前选中的GPU型号
+const selectedGpuModel = ref<string>('') // 当前选中的GPU型号
 const gpuModels = ref<string[]>([]) // 存储可用的GPU型号列表
 const hasGPU = ref(false);
+
+// 添加metricsHistory的声明
+type MetricPoint = { time: string; value: number };
+const metricsHistory = ref<{
+    cpu: MetricPoint[];
+    gpu: Record<string, MetricPoint[]>;
+    gpu_mem: Record<string, MetricPoint[]>;
+}>({
+    cpu: [],
+    gpu: {},
+    gpu_mem: {},
+});
+
+// 添加nodeStatus的声明
 const nodeStatus = ref({
     cpu: {
         usage: 0,
@@ -36,99 +45,189 @@ const nodeStatus = ref({
         mem_usage: ""
     }
 });
-type MetricPoint = { time: string; value: number };
-const metricsHistory = ref<Record<'cpu' | 'gpu', MetricPoint[]>>({
-    cpu: [],
-    gpu: [],
+
+// 添加updateHistory函数
+const updateHistory = (arr: MetricPoint[], newVal: number, time: string) => {
+    return [...arr.slice(-49), { time, value: newVal }]; // 保留50个数据点
+};
+
+// 修改系统信息状态
+const systemInfo = ref({
+    cpuName: ''
 });
 
-const updateHistory = (arr: MetricPoint[], newVal: number, time: string) => {
-    return [...arr.slice(-59), { time, value: newVal }]; // 保留60个数据点
-};
-// 实时数据获取
-const fetchMetrics = async () => {
-    try {
-        const res = await axios.get(`http://${props.node?.ip}:${props.node?.port}/node/metrics`);
-        const now = new Date().toLocaleTimeString();
-
-        // 新增GPU存在性判断
-        hasGPU.value = !!res.data.gpu_info && Object.keys(res.data.gpu_info).length > 0;
-
-        // 处理CPU数据（新增部分）
-        metricsHistory.value.cpu = updateHistory(
-            metricsHistory.value.cpu,
-            res.data.cpu.cpu_usage,
-            now
-        );
-
-        // 更新CPU状态数据
-        nodeStatus.value.cpu = {
-            usage: res.data.cpu.cpu_usage,
-            temp: res.data.cpu.temp || 0, // 根据实际接口字段调整
-            freq: res.data.cpu.cpu_freq
-        };
-
-        // 处理GPU数据（优化后的部分）
-        if (hasGPU.value) {
-            const gpuList = Object.keys(res.data.gpu_info);
-            gpuModels.value = gpuList;
-
-            if (gpuList.length > 0 && !selectedGpuModel.value) {
-                selectedGpuModel.value = gpuList[0];
-            }
-
-            if (selectedStat.value === 'gpu' && selectedGpuModel.value) {
-                const gpu = res.data.gpu_info[selectedGpuModel.value];
-                metricsHistory.value.gpu = updateHistory(
-                    metricsHistory.value.gpu,
-                    (gpu.used / gpu.total * 100),
-                    now
-                );
-
-                nodeStatus.value.gpu = {
-                    usage: Number((gpu.used / gpu.total * 100).toFixed(1)),
-                    temp: gpu.temperature,
-                    mem_usage: `${(gpu.used / 1024).toFixed(1)}/${(gpu.total / 1024).toFixed(1)}GB`
-                }
-            }
-        }
-
-        initChart();
-    } catch (err) {
-        console.error('获取指标失败:', err);
-    }
-};
-
-let chart: echarts.ECharts;
+let chart: echarts.ECharts | null = null;
+let socket: WebSocket | null = null;
 
 const initChart = () => {
     const dom = document.getElementById('metrics-chart');
     if (!dom) return;
 
-    // 销毁旧实例
     if (!chart) {
         chart = echarts.init(dom);
     }
 
+    const currentData = selectedStat.value === 'cpu'
+        ? metricsHistory.value.cpu
+        : (metricsHistory.value.gpu[selectedGpuModel.value] || []);
+
+    // 更新图表配置
     chart.setOption({
+        tooltip: {
+            trigger: 'axis'
+        },
         xAxis: {
             type: 'category',
-            data: metricsHistory.value[selectedStat.value].map(i => i.time)
+            data: currentData.map(i => i.time)
         },
         yAxis: {
             type: 'value',
             axisLabel: {
-                formatter: selectedStat.value === 'cpu' ? '{value}%' : '{value}%'
-            }
+                formatter: '{value}%'
+            },
+            max: 100
         },
         series: [{
-            data: metricsHistory.value[selectedStat.value].map(i => i.value),
             type: 'line',
+            data: currentData.map(i => i.value),
             smooth: true,
-            showSymbol: false // 隐藏数据点
+            showSymbol: false,
+            itemStyle: {
+                color: '#409EFF'
+            }
         }]
     });
 };
+
+// 添加一个新的 ref 来存储 GPU 信息
+const gpuInfo = ref<Record<string, any>>({});
+
+// 使用WebSocket替代轮询
+const setupWebSocket = () => {
+    if (!props.node?.ip || !props.node?.port) return;
+
+    // 关闭已存在的连接
+    if (socket) {
+        socket.close();
+    }
+
+    // 创建新的WebSocket连接
+    socket = new WebSocket(`ws://${props.node.ip}:${props.node.port}/node/ws`);
+
+    socket.onopen = () => {
+        console.log('WebSocket连接已建立');
+    };
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        processMetricsData(data);
+    };
+
+    socket.onerror = (error) => {
+        console.error('WebSocket错误:', error);
+        // 连接失败时尝试使用HTTP轮询作为备选方案
+        // fetchMetrics();
+    };
+
+    socket.onclose = () => {
+        console.log('WebSocket连接已关闭');
+    };
+};
+
+// 处理接收到的指标数据
+const processMetricsData = (res: any) => {
+    const now = new Date().toLocaleTimeString();
+
+    // 更新CPU名称
+    systemInfo.value.cpuName = res.cpu.name || '未知CPU';
+
+    // 更新CPU数据
+    metricsHistory.value.cpu = updateHistory(
+        metricsHistory.value.cpu,
+        res.cpu.cpu_usage,
+        now
+    );
+
+    nodeStatus.value.cpu = {
+        usage: res.cpu.cpu_usage,
+        temp: res.cpu.temp || 0,
+        freq: res.cpu.cpu_freq
+    };
+
+    // GPU 处理
+    if (res.gpu_info && Object.keys(res.gpu_info).length > 0) {
+        gpuInfo.value = res.gpu_info;
+        const gpuList = Object.keys(res.gpu_info);
+        gpuModels.value = gpuList;
+        hasGPU.value = true;
+
+        if (gpuList.length > 0 && (!selectedGpuModel.value || !gpuList.includes(selectedGpuModel.value))) {
+            selectedGpuModel.value = gpuList[0];
+        }
+
+        // 为每个 GPU 更新数据
+        gpuList.forEach(gpuKey => {
+            const gpu = res.gpu_info[gpuKey];
+            if (gpu) {
+                // 初始化该 GPU 的历史数据数组（如果不存在）
+                if (!metricsHistory.value.gpu[gpuKey]) {
+                    metricsHistory.value.gpu[gpuKey] = [];
+                }
+                if (!metricsHistory.value.gpu_mem[gpuKey]) {
+                    metricsHistory.value.gpu_mem[gpuKey] = [];
+                }
+
+                // 计算GPU使用率
+                const gpuUsage = Number(((gpu.used / gpu.total) * 100).toFixed(1));
+
+                // 更新GPU使用率历史
+                metricsHistory.value.gpu[gpuKey] = updateHistory(
+                    metricsHistory.value.gpu[gpuKey],
+                    gpuUsage,
+                    now
+                );
+
+                // 如果是当前选中的 GPU，更新状态显示
+                if (gpuKey === selectedGpuModel.value) {
+                    nodeStatus.value.gpu = {
+                        usage: gpuUsage,
+                        temp: gpu.temperature,
+                        mem_usage: `${(gpu.used / 1024).toFixed(1)}/${(gpu.total / 1024).toFixed(1)}GB`
+                    };
+                }
+            }
+        });
+    }
+
+    // 使用 setTimeout 确保 DOM 已更新
+    setTimeout(() => {
+        initChart();
+    }, 0);
+};
+
+
+// 添加监听器，当切换 CPU/GPU 时更新图表
+watch(selectedStat, () => {
+    setTimeout(() => {
+        initChart();
+    }, 0);
+});
+
+// 修改 GPU 监听器
+watch(selectedGpuModel, (newGpu) => {
+    if (newGpu && gpuInfo.value[newGpu]) {
+        const gpu = gpuInfo.value[newGpu];
+        nodeStatus.value.gpu = {
+            usage: Number(((gpu.used / gpu.total) * 100).toFixed(1)),
+            temp: gpu.temperature,
+            mem_usage: `${(gpu.used / 1024).toFixed(1)}/${(gpu.total / 1024).toFixed(1)}GB`
+        };
+        setTimeout(() => {
+            initChart();
+        }, 0);
+    }
+});
+
 const getNodeStatus = async () => {
     try {
         const res = await axios.get(`http://${props.node?.ip}:${props.node?.port}/status`)
@@ -138,14 +237,30 @@ const getNodeStatus = async () => {
     }
 }
 
-
 onMounted(async () => {
     getNodeStatus();
-    fetchMetrics();
-    const timer = setInterval(fetchMetrics, 500); // 5秒轮询
-    onUnmounted(() => clearInterval(timer));
-})
+    setupWebSocket();
+});
 
+onUnmounted(() => {
+    // 组件卸载时关闭WebSocket连接
+    if (socket) {
+        socket.close();
+        socket = null;
+    }
+    // 销毁图表实例
+    if (chart) {
+        chart.dispose();
+        chart = null;
+    }
+});
+
+// 监听节点变化，重新建立WebSocket连接
+watch(() => props.node, (newNode) => {
+    if (newNode) {
+        setupWebSocket();
+    }
+}, { deep: true });
 </script>
 
 <template>
@@ -177,25 +292,31 @@ onMounted(async () => {
                 </div>
             </div>
             <div class="status-panel">
-                <div class="stat-switcher">
-                    <button v-for="stat in ['cpu', 'gpu'] as const" :key="stat" @click="selectedStat = stat" :class="{
-                        active: selectedStat === stat,
-                        disabled: stat === 'gpu' && !hasGPU
-                    }" :disabled="stat === 'gpu' && !hasGPU">
-                        {{ stat.toUpperCase() }}
-                    </button>
-                    <select v-if="selectedStat === 'gpu' && gpuModels.length > 0" v-model="selectedGpuModel"
-                        class="gpu-selector">
-                        <option v-for="model in gpuModels" :key="model" :value="model">
-                            {{ model }}
-                        </option>
-                    </select>
-                    <div class="selected-name">
-                        {{ selectedStat === 'cpu' ? props.systemInfo.cpu : selectedGpuModel }}
+                <div class="stat-header">
+                    <div class="stat-switcher">
+                        <button v-for="stat in ['cpu', 'gpu'] as const" :key="stat" @click="selectedStat = stat" :class="{
+        active: selectedStat === stat,
+        disabled: stat === 'gpu' && !hasGPU
+    }" :disabled="stat === 'gpu' && !hasGPU">
+                            {{ stat.toUpperCase() }}
+                        </button>
+                        <select v-if="selectedStat === 'gpu' && gpuModels.length > 0" v-model="selectedGpuModel"
+                            class="gpu-selector">
+                            <option v-for="key in gpuModels" :key="key" :value="key">
+                                {{ key }}
+                            </option>
+                        </select>
+                        <div class="selected-name">
+                            {{ selectedStat === 'cpu' ?
+        systemInfo.cpuName :
+        (gpuInfo[selectedGpuModel]?.name || '') }}
+                        </div>
                     </div>
                 </div>
 
-                <div id="metrics-chart" style="height: 300px; width: 100%"></div>
+                <div class="chart-container">
+                    <div id="metrics-chart" style="height: 300px; width: 100%"></div>
+                </div>
                 <div class="stat-content" v-show="selectedStat === 'cpu'">
                     <div class="metric-row">
                         <div class="metric-item">
@@ -220,7 +341,7 @@ onMounted(async () => {
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">显存使用</span>
-                            <span class="metric-value">{{ nodeStatus.gpu.mem_usage }}GHz</span>
+                            <span class="metric-value">{{ nodeStatus.gpu.mem_usage }}</span>
                         </div>
                     </div>
                 </div>
@@ -355,73 +476,20 @@ onMounted(async () => {
     border-radius: 12px;
     padding: 20px;
     margin: 20px 0;
-    position: relative;
 }
 
 .stat-switcher {
-    position: absolute;
-    left: 15px;
-    top: 15px;
+    position: static;
+    /* 移除绝对定位 */
     display: flex;
     flex-wrap: wrap;
-    /* 允许换行 */
     gap: 8px;
     align-items: center;
-
-    button {
-        padding: 4px 12px;
-        border-radius: 6px;
-        border: 1px solid #ddd;
-        background: white;
-        font-size: 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-
-        &.active {
-            background: #4B9BFF;
-            color: white;
-            border-color: transparent;
-        }
-    }
 }
 
-.stat-switcher button.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: #f0f0f0;
-    border-color: #ddd;
-    color: #999;
-}
-
-.stat-switcher button.disabled:hover {
-    background: #f0f0f0;
-    transform: none;
-    box-shadow: none;
-}
-
-.gpu-selector {
-    margin-left: 10px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-    background: white;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-        border-color: #4B9BFF;
-    }
-}
-
-.selected-name {
-    margin-left: 15px;
-    font-size: 12px;
-    color: #666;
-    padding: 4px 8px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.chart-container {
+    margin-top: 20px;
+    /* 增加与按钮的间距 */
 }
 
 .stat-content {
@@ -474,5 +542,18 @@ onMounted(async () => {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(75, 155, 255, 0.3);
     }
+}
+
+.gpu-selector {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #dcdfe6;
+    margin-left: 8px;
+}
+
+.selected-name {
+    margin-left: 10px;
+    font-size: 14px;
+    color: #606266;
 }
 </style>

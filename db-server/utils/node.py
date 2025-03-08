@@ -1,5 +1,7 @@
+import pynvml, subprocess, sys, torch, psutil
+
+
 def get_gpu_info():
-    import pynvml
 
     # 初始化 NVML 库，该库用于与 NVIDIA GPU 进行交互
     pynvml.nvmlInit()
@@ -30,10 +32,11 @@ def get_gpu_info():
         memory_frequency = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_MEM)
 
         # 将获取到的 GPU 信息存储在字典中
-        gpu_info[f"{gpu_name}"] = {
-            "total": round(memory_info.total / (1024**2), 2),
-            "used": round(memory_info.used / (1024**2), 2),
-            "free": round(memory_info.free / (1024**2), 2),
+        gpu_info[f"gpu{i}"] = {
+            "name": gpu_name,
+            "total": round(float(memory_info.total) / (1024**2), 2),
+            "used": round(float(memory_info.used) / (1024**2), 2),
+            "free": round(float(memory_info.free) / (1024**2), 2),
             "temperature": temperature,
             "core_frequency": core_frequency,
             "memory_frequency": memory_frequency,
@@ -43,3 +46,69 @@ def get_gpu_info():
     pynvml.nvmlShutdown()
 
     return gpu_info
+
+
+def get_cpu_info():
+    """获取CPU型号名称"""
+
+    try:
+        if sys.platform == "win32":
+            # Windows 使用WMIC命令获取CPU名称
+            cmd = "wmic cpu get name /value"
+            output = subprocess.check_output(cmd, shell=True).decode().strip()
+            return output.split("=")[1] if "=" in output else "Unknown CPU"
+        elif sys.platform == "darwin":
+            # macOS 使用sysctl命令
+            cmd = ["sysctl", "-n", "machdep.cpu.brand_string"]
+            return subprocess.check_output(cmd).decode().strip()
+        elif sys.platform.startswith("linux"):
+            # Linux 读取/proc/cpuinfo
+            with open("/proc/cpuinfo", "r") as f:
+                for line in f:
+                    if "model name" in line:
+                        return line.split(":")[1].strip()
+            return "Unknown CPU"
+    except Exception as e:
+        pass
+    return "Unknown CPU"
+
+
+def get_metrics_data():
+    
+    HAS_GPU = torch.cuda.is_available()
+    cpu_name = get_cpu_info()
+    cpu_usage = psutil.cpu_percent(interval=0.1)
+    cpu_freq = round(psutil.cpu_freq().current / 1000, 2)  # 转换为GHz并保留两位小数
+    if HAS_GPU:
+        gpu_info = get_gpu_info()
+    else:
+        gpu_info = {}
+    return {
+        "cpu": {"cpu_usage": 1.4, "cpu_freq": 3.7, "name": "apple M2"},
+        "gpu_info": {
+            "gpu0": {
+                "name": "NVIDIA GeForce RTX 4060 Ti",
+                "total": 8188.0,
+                "used": 1669.43,
+                "free": 6518.57,
+                "temperature": 34,
+                "core_frequency": 210,
+                "memory_frequency": 405,
+            },
+            "gpu1": {
+                "name": "NVIDIA GeForce RTX 4060 Ti",
+                "total": 6000.0,
+                "used": 2000,
+                "free": 4000,
+                "temperature": 34,
+                "core_frequency": 210,
+                "memory_frequency": 405,
+            },
+        },
+        # "cpu": {
+        #     "name": cpu_name,
+        #     "cpu_usage": cpu_usage,
+        #     "cpu_freq": cpu_freq,
+        # },
+        # "gpu_info": gpu_info,
+    }

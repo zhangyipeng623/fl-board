@@ -163,12 +163,12 @@ onMounted(async () => {
 					<el-upload ref="uploadRef" class="upload-demo" :action="uploadUrl" :auto-upload="false"
 						:before-upload="beforeUpload" :on-success="handleUploadSuccess" :on-error="handleUploadError"
 						:data="{
-							netName: netName,
-							inputNum: inputNum,
-							outputNum: outputNum,
-							detail: detail,
-							user_id: state.user.id,
-						}" accept=".py">
+				netName: netName,
+				inputNum: inputNum,
+				outputNum: outputNum,
+				detail: detail,
+				user_id: state.user.id,
+			}" accept=".py">
 						<el-button size="small" type="primary">点击上传 py 文件</el-button>
 						<el-tooltip effect="light" class="item" content="python文件中需要包含Net类和DataSet类" placement="right">
 							<el-icon style="margin-left: 10px">

@@ -4,17 +4,19 @@
 
     // 设置表头背景透明
     th.el-table__cell {
-        background-color: rgba(255, 255, 255, 0.4) !important;
-    }
-
-    // 设置单元格背景透明
-    td.el-table__cell {
         background-color: rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(3px);
     }
 
-    // 设置鼠标悬停效果
+    // 设置单元格背景完全透明
+    td.el-table__cell {
+        background-color: transparent !important;
+    }
+
+    // 设置鼠标悬停效果，使用更🙂的透明度变化
     tr:hover td {
-        background-color: rgba(255, 255, 255, 0.4) !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(2px);
     }
 
     // 设置表格内部背景透明
@@ -37,6 +39,11 @@
     .el-table__fixed-right,
     .el-table__fixed {
         background-color: transparent !important;
+        
+        // 固定列的单元格也需要透明
+        td.el-table__cell {
+            background-color: transparent !important;
+        }
     }
 
     // 设置固定列阴影效果
@@ -46,15 +53,37 @@
 
     // 设置斑马纹背景（如果使用）
     tr.el-table__row--striped td {
+        background-color: transparent !important;
+    }
+
+    // 设置表格边框颜色为半透明或移除
+    &::before {
         background-color: rgba(255, 255, 255, 0.1) !important;
     }
 
-    // 设置表格边框颜色为半透明
-    &::before {
-        background-color: rgba(255, 255, 255, 0.2) !important;
+    // 移除表格行的默认背景色
+    .el-table__row {
+        background-color: transparent !important;
     }
 
+    // 确保悬停状态下的背景也是透明的
     &--enable-row-hover .el-table__body tr:hover>td {
-        background-color: rgba(255, 255, 255, 0.4) !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(2px);
     }
+    
+    // 确保表格单元格内容可见
+    .cell {
+        color: #333;
+    }
+}
+
+// 添加额外的选择器以覆盖可能的默认样式
+.el-table__body tr {
+    background-color: transparent !important;
+}
+
+// 确保表格行的背景色在所有状态下都是透明的
+.el-table__row {
+    background-color: transparent !important;
 }

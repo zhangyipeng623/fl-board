@@ -5,7 +5,8 @@ from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import flwr as fl
-import logging, importlib
+import logging
+import importlib
 from typing import Tuple
 
 # 配置设备
@@ -134,29 +135,11 @@ def start(net, logger, aligned_db):
 
     net_class, dataset_class = init_net(net)
     net_class = net_class()
-    dataset = load_data(f"./data/aligned/{aligned_db}.csv", dataset_class, device)
+    dataset = load_data(
+        f"./data/aligned/{aligned_db}.csv", dataset_class, device)
     trainloader = DataLoader(dataset, batch_size=8, shuffle=True)
     fl.client.start_numpy_client(
         server_address="127.0.0.1:10001",
+        grpc_max_message_length=10*1024*1024*10244,
         client=FlowerClient(trainloader, net_class, logger).to_client(),
-    )
-
-
-if __name__ == "__main__":
-    logging.basicConfig(
-        filename="client.log",  # 新增：输出日志到文件
-        level=logging.INFO,  # 新增：日志级别
-        format="%(asctime)s - %(levelname)s - %(message)s",  # 新增：日志格式
-    )
-    logger = logging.getLogger("Main")
-    # 通过命令行参数获取客户端ID
-
-    # 加载数据
-    dataset = load_data()
-    trainloader = DataLoader(dataset, batch_size=8, shuffle=True)
-
-    # 启动客户端
-    fl.client.start_numpy_client(
-        server_address="127.0.0.1:10001",
-        client=FlowerClient(trainloader, logger).to_client(),
     )

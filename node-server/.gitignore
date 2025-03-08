@@ -4,3 +4,4 @@ static/
 test.py
 data/
 log/
+test*

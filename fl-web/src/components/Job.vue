@@ -168,6 +168,7 @@ onMounted(async () => {
 });
 </script>
 
+<!-- todo 展示任务进度和日志 -->
 <template>
 	<div class="container">
 		<div class="scrollable-content">

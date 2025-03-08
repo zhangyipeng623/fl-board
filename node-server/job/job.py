@@ -1,4 +1,7 @@
-import logging, time, json, os
+import logging
+import time
+import json
+import os
 from model import redis
 from job.node_server import start
 
@@ -29,7 +32,8 @@ def start_job():
         file_handler.setLevel(logging.INFO)
 
         # 设置日志格式
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s - %(levelname)s - %(message)s")
         file_handler.setFormatter(formatter)
 
         # 将 FileHandler 添加到 Logger
