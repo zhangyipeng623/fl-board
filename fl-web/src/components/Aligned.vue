@@ -17,7 +17,7 @@ onMounted(async () => {
 <template>
 	<div class="container">
 		<div class="scrollable-content">
-			<el-table :data="alignedList">
+			<el-table :data="alignedList" height="100%" style="width: 100%">
 				<el-table-column fixed prop="aligned_db" label="数据库名称" align="center" />
 				<el-table-column label="原始数据库" header-align="center" align="center">
 					<template #default="{ row }">

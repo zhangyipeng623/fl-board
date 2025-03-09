@@ -1,26 +1,45 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from model import Net, redis
+from model import Net, redis, User
 from fastapi import UploadFile, File, Form, Request
-import ast, uuid, json
+import ast
+import uuid
+import json
 from ast import ClassDef
 from typing import List
 
 net = APIRouter(prefix="/net")
 
 
-def check_class_in_code(code: str, target_class: List[str]) -> List[str]:
-    """检查代码中是否包含目标类"""
+def check_code_elements(code: str, target_classes: List[str] = None, target_functions: List[str] = None) -> dict:
+    """检查代码中是否包含目标类和函数
+
+    Args:
+        code: 源代码字符串
+        target_classes: 要检查的类名列表
+        target_functions: 要检查的函数名列表
+
+    Returns:
+        dict: 包含找到的类和函数的字典
+    """
     try:
         tree = ast.parse(code)
     except SyntaxError:
-        return []
+        return {"classes": [], "functions": []}
 
-    found_class = []
+    found_classes = []
+    found_functions = []
+
     for node in ast.walk(tree):
-        if isinstance(node, ClassDef) and node.name in target_class:
-            found_class.append(node.name)
-    return found_class
+        if target_classes and isinstance(node, ast.ClassDef) and node.name in target_classes:
+            found_classes.append(node.name)
+        elif target_functions and isinstance(node, ast.FunctionDef) and node.name in target_functions:
+            found_functions.append(node.name)
+
+    return {
+        "classes": found_classes,
+        "functions": found_functions
+    }
 
 
 @net.get("/list")
@@ -47,7 +66,9 @@ async def net_upload(
     user_info = json.loads(user_info)
     if user_info["id"] != user_id:
         raise HTTPException(401, detail="数据不正确")
-
+    user = User.get_or_none(User.id == user_id)
+    if not user:
+        raise HTTPException(401, detail="用户不存在")
     # 上传网络模型
     if not file.filename.endswith(".py"):
         raise HTTPException(400, "仅支持 Python 文件 (.py)")
@@ -55,12 +76,19 @@ async def net_upload(
         # 读取文件内容
         contents = await file.read()
         code = contents.decode("utf-8")
-    except UnicodeDecodeError:
-        raise HTTPException(400, "文件解码失败，请确保是有效的 UTF-8 文本文件")
+    except Exception as e:
+        raise HTTPException(400, "文件解码失败，请确保是有效的 UTF-8 文本文件") from e
 
-    found_class = check_class_in_code(code, ["Net", "DataSet"])
-    if "Net" not in found_class or "DataSet" not in found_class:
-        raise HTTPException(400, "文件内容中未找到 Net 或 DataSet 类")
+    found_elements = check_code_elements(
+        code, ["Net"], ["transform_x", "transform_y", "get_optimizer", "get_criterion"])
+    print(found_elements)
+    if ("Net" not in found_elements["classes"] or
+        "transform_x" not in found_elements["functions"] or
+            "transform_y" not in found_elements["functions"] or
+            "get_optimizer" not in found_elements["functions"] or
+            "get_criterion" not in found_elements["functions"]):
+        raise HTTPException(
+            400, "文件内容中未找到 Net 类 或 transform_x、transform_y、get_optimizer、get_criterion函数")
     file_name = uuid.uuid4()
 
     # 保存文件
@@ -69,15 +97,15 @@ async def net_upload(
     try:
         Net.create(
             net_name=netName,
-            node_name=user_info["username"],
+            nodename=user.node.nodename,
             file_name=file_name,
             input_num=inputNum,
             output_num=outputNum,
             detail=detail,
-            user_id=user_id,
+            node_id=user.node.id,
         )
     except Exception as e:
-        raise HTTPException(400, f"上传失败，res:{e}")
+        raise HTTPException(400, f"上传失败，res:{e}") from e
     return {"status": "success"}
 
 
@@ -103,5 +131,6 @@ def get_net_file(request: Request):
             media_type="application/octet-stream",  # 文件的内容类型，可随需求调整
             filename=f"{file_name}.py",  # 下载的文件名，例如：net_id.py
         )
+
     except FileNotFoundError:
         raise HTTPException(404, detail="文件未找到")

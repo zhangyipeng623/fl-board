@@ -24,6 +24,9 @@ async def check_session(request: Request, call_next):
         "/ruler/get",
         "/net/get_net_file",
         "/node/metrics",
+        "/job/update",
+        "/docs",
+        "/openapi.json"
     ]
     if request.url.path in not_check_session:
         return await call_next(request)

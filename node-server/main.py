@@ -10,12 +10,12 @@ def monitor_and_restart_processes(process):
     while True:
         if not process.is_alive():
             print(f"[监控] 进程 {process.name} 已退出，正在重启...")
-        new_process = multiprocessing.Process(
-            target=start_job, name="start_job"
-        )
-        new_process.start()
-        print(f"[监控] 进程 {process.name} 重启成功,pid: {new_process.pid}")
-        process = new_process
+            new_process = multiprocessing.Process(
+                target=start_job, name="start_job"
+            )
+            new_process.start()
+            print(f"[监控] 进程 {process.name} 重启成功,pid: {new_process.pid}")
+            process = new_process
         time.sleep(1)
 
 

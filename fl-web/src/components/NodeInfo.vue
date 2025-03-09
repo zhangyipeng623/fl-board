@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Background from "./Background.vue";
 import { onMounted, onBeforeUnmount, ref } from "vue";
 import { state } from "@/utils/settings";
 import type { DbNode } from "@/utils/settings";

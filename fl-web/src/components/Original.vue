@@ -36,7 +36,7 @@ onMounted(() => {
 <template>
 	<div class="container">
 		<div class="scrollable-content">
-			<el-table :data="tableData">
+			<el-table :data="tableData" height="100%" style="width: 100%">
 				<!-- todo 添加分页、排序等功能 -->
 				<el-table-column fixed prop="db_name" label="数据库名称" align="center" />
 				<el-table-column prop="nodename" label="节点名称" align="center" />

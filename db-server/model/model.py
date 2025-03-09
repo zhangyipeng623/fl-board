@@ -102,7 +102,7 @@ class DataBase(BaseModel):
     id = AutoField()
     db_name = CharField(null=False)
     node = ForeignKeyField(column_name='node_id', model=Node,
-                           field=Node.id, backref="users", null=False)
+                           field=Node.id, backref="dbs", null=False)
     nodename = CharField(null=False)
     field = JSONField(null=False)
     data_number = IntegerField(null=False, default=0)
@@ -145,10 +145,11 @@ class RulerDetail(BaseModel):
 class Net(BaseModel):
     id = AutoField()
     net_name = CharField(null=False)
-    node_name = CharField(null=False)
+    nodename = CharField(null=False)
     input_num = IntegerField(null=False)
     output_num = IntegerField(null=False)
     file_name = CharField(null=False)
+    node_id = IntegerField(null=False)
     detail = TextField(null=True)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
@@ -165,11 +166,28 @@ class Job(BaseModel):
     db_name = CharField(null=False)
     net_name = CharField(null=False)
     net_id = IntegerField(null=False)
-    input_field = CharField(null=False)
-    output_field = CharField(null=False)
+    input_field = JSONField(null=False)
+    output_field = JSONField(null=False)
     status = CharField(null=False)
+    total = IntegerField(null=False)
+    finished = IntegerField(null=False)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
         table_name = "job"
+
+
+class NodeJob(BaseModel):
+    id = AutoField()
+    node = ForeignKeyField(column_name='node_id', model=Node,
+                           field=Node.id, backref="jobs", null=False)
+    job_id = CharField(null=False)
+    status = CharField(null=False)
+    total = IntegerField(null=False)
+    finished = IntegerField(null=False)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+
+    class Meta:
+        table_name = "node_job"

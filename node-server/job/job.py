@@ -2,8 +2,34 @@ import logging
 import time
 import json
 import os
+import requests
 from model import redis
-from job.node_server import start
+from .node_server import start
+from config import config
+
+
+def update_job_status(job_id, node_id, status, logger):
+    base_url = f"http://{config.center_host}:{config.center_port}/job/update"
+    params = {
+        "label": "status",
+        "job_id": job_id,
+        "node": node_id,
+        "data": status
+    }
+    url = f"{base_url}?" + "&".join(f"{k}={v}" for k, v in params.items())
+    try:
+        # 设置超时时间为5秒，避免请求无限等待
+        res = requests.get(url, timeout=500)
+        if res.status_code == 200:
+            logger.info("任务状态更新成功")
+        else:
+            logger.error("任务状态更新失败")
+    except requests.Timeout:
+        # 请求超时处理
+        logger.error(f"更新任务数据超时: job_id={job_id}")
+    except requests.RequestException as e:
+        # 其他请求异常处理
+        logger.error(f"更新任务数据失败: {str(e)}")
 
 
 def start_job():
@@ -41,9 +67,15 @@ def start_job():
 
         # 启动对应的任务，并记录日志
         try:
-            start(job.get("net_file"), logger, job.get("aligned_db"))
+            update_job_status(job.get("job_id"), job.get(
+                "node_id"), "running", logger)
+            start(job, logger=logger)
+            update_job_status(job.get("job_id"), job.get(
+                "node_id"), "finished", logger)
+        except Exception as e:
+            logger.error("任务执行失败: %s", str(e))
         finally:
-            # 任务结束后移除 Handler，避免资源泄露
+
             logger.removeHandler(file_handler)
             file_handler.close()
 

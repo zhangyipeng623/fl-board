@@ -69,7 +69,7 @@ const handleUpdateType = async (row: any, field: string, newType: string) => {
 <template>
 	<div class="container">
 		<div class="scrollable-content">
-			<el-table :data="rulerList">
+			<el-table :data="rulerList" height="100%" style="width: 100%">
 				<el-table-column fixed prop="ruler_name" label="对齐规则名称" align="center" />
 				<el-table-column prop="aligned_db" label="对齐数据库" align="center"></el-table-column>/>
 				<!-- 修改原始数据库列 -->

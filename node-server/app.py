@@ -25,10 +25,11 @@ async def check_session(request: Request, call_next):
     not_check_session = [
         "/check_session",
         "/status",
-
         "/node/metrics",
+        "/docs",
+        "/openapi.json"
     ]
-    if request.url.path in not_check_session:
+    if request.url.path in not_check_session or request.url.path.startswith("/job/log/"):
         return await call_next(request)
     elif request.url.path in center_request:
         ip = request.headers.get("x-forwarded-for")
